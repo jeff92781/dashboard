@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Desempenho das Filiais</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <style>
+    :root{
+      --bg:#07111f;
+      --bg2:#0a1c31;
+      --panel:#10253d;
+      --panel2:#0d1d31;
+      --stroke:#25486c;
+      --stroke2:#35638d;
+      --text:#f4f8ff;
+      --muted:#8fb4dc;
+      --blue1:#38bdf8;
+      --blue2:#0ea5e9;
+      --blue3:#2563eb;
+      --blue4:#93c5fd;
+      --blue5:#60a5fa;
+      --cyan:#67e8f9;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+      --radius: 22px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 28%),
+        radial-gradient(circle at 80% 10%, rgba(37,99,235,.16), transparent 24%),
+        linear-gradient(180deg,#061020 0%, #08182a 45%, #06101d 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .topbar{
+      padding:28px 32px 22px;
+      border-bottom:1px solid rgba(96,165,250,.18);
+      background:rgba(5,12,24,.74);
+      backdrop-filter:blur(18px);
+      position:sticky;top:0;z-index:20;
+    }
+    .header-row{display:flex;align-items:center;justify-content:space-between;gap:22px;margin-bottom:22px}
+    .brand{display:flex;align-items:center;gap:16px;min-width:0}
+    .logo{
+      width:64px;height:64px;border-radius:20px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,#1d4ed8 0%,#38bdf8 55%,#0f766e 100%);
+      box-shadow:0 14px 35px rgba(14,165,233,.25);
+      font-weight:900;font-size:32px;color:white;
+    }
+    .kicker{font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:#7dd3fc;font-weight:900;margin-bottom:4px}
+    h1{margin:0;font-size:clamp(25px,2.2vw,38px);line-height:1.08;font-weight:900;letter-spacing:-.04em}
+    .subtitle{margin:8px 0 0;color:var(--muted);font-weight:600;font-size:15px}
+    .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    button,.file-btn{
+      border:1px solid rgba(125,211,252,.35);
+      background:linear-gradient(180deg,rgba(28,64,105,.92),rgba(14,30,52,.92));
+      color:var(--text);font-weight:900;border-radius:16px;
+      padding:14px 18px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+      transition:.2s ease;white-space:nowrap;
+    }
+    button:hover,.file-btn:hover{transform:translateY(-1px);border-color:#7dd3fc;background:linear-gradient(180deg,rgba(37,99,235,.45),rgba(14,30,52,.95))}
+    input[type=file]{display:none}
+    .filters{display:grid;grid-template-columns:1.15fr 1.15fr;gap:14px;max-width:980px}
+    .filter-card{
+      background:linear-gradient(135deg,rgba(16,37,61,.96),rgba(9,24,42,.95));
+      border:1px solid rgba(96,165,250,.22);border-radius:var(--radius);
+      padding:16px;box-shadow:var(--shadow);
+    }
+    .filter-card label{display:block;color:#bed6f2;text-transform:uppercase;font-weight:900;letter-spacing:.08em;font-size:13px;margin-bottom:10px}
+    .range-duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    input,select{
+      width:100%;border:1px solid rgba(125,211,252,.32);
+      border-radius:15px;background:#09172a;color:var(--text);padding:15px 16px;
+      outline:none;font-weight:800;font-size:15px;
+    }
+    input:focus,select:focus{border-color:#7dd3fc;box-shadow:0 0 0 4px rgba(56,189,248,.08)}
+
+    select{cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#93c5fd 50%),linear-gradient(135deg,#93c5fd 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:44px}
+    .multi-select{position:relative}
+    .multi-btn{
+      width:100%;min-height:51px;border:1px solid rgba(125,211,252,.32);border-radius:15px;background:#09172a;color:var(--text);
+      padding:15px 44px 15px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;font-weight:900;font-size:15px;text-align:left;
+      background-image:linear-gradient(45deg,transparent 50%,#93c5fd 50%),linear-gradient(135deg,#93c5fd 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;
+    }
+    .multi-btn:focus{outline:none;border-color:#7dd3fc;box-shadow:0 0 0 4px rgba(56,189,248,.08)}
+    .multi-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:30;background:#07182b;border:1px solid rgba(125,211,252,.36);border-radius:16px;padding:8px;box-shadow:0 18px 45px rgba(0,0,0,.45)}
+    .multi-select.open .multi-menu{display:grid;gap:6px}
+    .multi-option{display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:12px;color:#dbeafe;font-weight:900;cursor:pointer}
+    .multi-option:hover{background:rgba(56,189,248,.10)}
+    .multi-option input{width:17px;height:17px;accent-color:#38bdf8;cursor:pointer}
+    .multi-actions{display:flex;gap:8px;border-top:1px solid rgba(125,211,252,.18);padding-top:8px;margin-top:4px}
+    .multi-actions button{padding:9px 10px;border-radius:11px;font-size:12px;flex:1}
+
+    main{padding:28px 32px 46px}
+    .section-title{margin:0 0 8px;font-size:30px;font-weight:900;letter-spacing:-.04em}
+    .period-label{color:#93c5fd;font-weight:600;margin-bottom:22px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
+    .metric{
+      position:relative;overflow:hidden;min-height:148px;
+      background:linear-gradient(135deg,rgba(17,39,63,.96),rgba(8,22,39,.98));
+      border:1px solid rgba(96,165,250,.23);border-radius:var(--radius);padding:22px;
+      box-shadow:var(--shadow);
+    }
+    .metric:after{
+      content:"";position:absolute;right:-45px;top:-55px;width:150px;height:150px;border-radius:50%;
+      background:radial-gradient(circle,rgba(56,189,248,.24),transparent 62%);
+    }
+    .metric .tag{
+      position:absolute;right:18px;top:18px;border:1px solid rgba(125,211,252,.32);
+      background:rgba(14,165,233,.16);border-radius:16px;padding:12px 14px;color:#7dd3fc;font-weight:900;
+    }
+    .metric-title{text-transform:uppercase;color:#c7ddf6;letter-spacing:.08em;font-size:13px;font-weight:900;margin-bottom:16px;position:relative;z-index:1}
+    .metric-value{font-size:clamp(26px,2.4vw,40px);font-weight:900;letter-spacing:-.05em;margin-bottom:8px;position:relative;z-index:1}
+    .metric-foot{color:#67e8f9;font-weight:900;font-size:14px;position:relative;z-index:1}
+    .grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(360px,.85fr);gap:18px;align-items:stretch}
+    .panel{
+      background:linear-gradient(135deg,rgba(15,36,60,.96),rgba(7,21,37,.98));
+      border:1px solid rgba(96,165,250,.22);border-radius:var(--radius);
+      padding:22px;box-shadow:var(--shadow);min-width:0;
+    }
+    .panel-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px}
+    .panel-title{margin:0;font-size:22px;font-weight:900;letter-spacing:-.04em}
+    .panel-sub{color:#9fc3eb;font-weight:800;font-size:13px;text-align:right}
+    #lineChart{min-height:485px}
+    #donutChart{min-height:360px}
+    .legend-list{display:grid;gap:10px;margin-top:8px}
+    .legend-item{
+      display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;
+      padding:12px 14px;border:1px solid rgba(96,165,250,.2);border-radius:14px;background:rgba(5,14,27,.44);
+      font-size:13px;font-weight:900;
+    }
+    .legend-name{display:flex;align-items:center;gap:10px;min-width:0}
+    .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;background:var(--blue1)}
+    .legend-value{color:#dbeafe;white-space:nowrap}
+    .legend-pct{color:#7dd3fc;white-space:nowrap}
+    .hint{margin-top:18px;color:#85a7cf;font-size:12px;font-weight:700;line-height:1.5}
+    .empty{display:none;margin-top:18px;border:1px dashed rgba(125,211,252,.45);border-radius:18px;padding:18px;color:#bfdbfe;background:rgba(14,165,233,.07);font-weight:700}
+    @media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}
+    @media(max-width:760px){
+      .topbar{padding:20px 16px}.header-row{align-items:flex-start;flex-direction:column}.actions{width:100%;justify-content:stretch}.actions button,.actions .file-btn{flex:1;text-align:center}
+      .logo{width:54px;height:54px;border-radius:17px;font-size:28px}main{padding:22px 16px 34px}.filters,.range-duo,.cards{grid-template-columns:1fr}.filter-card:last-child{grid-column:auto}
+      .metric{min-height:128px}.grid{gap:14px}.panel{padding:16px}.panel-header{flex-direction:column}.panel-sub{text-align:left}#lineChart{min-height:390px}.legend-item{grid-template-columns:1fr;gap:6px}.legend-value,.legend-pct{padding-left:21px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="header-row">
+      <div class="brand">
+        <div class="logo">C</div>
+        <div>
+          <div class="kicker">Cobreflex</div>
+          <h1>Dashboard de Desempenho das Filiais</h1>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="clearBtn">Limpar filtros</button>
+      </div>
+    </div>
+    <div class="filters">
+      <div class="filter-card">
+        <label>Período</label>
+        <div class="range-duo">
+          <input type="date" id="startDate" />
+          <input type="date" id="endDate" />
+        </div>
+      </div>
+      <div class="filter-card">
+        <label>Filial</label>
+        <div class="multi-select" id="branchMulti">
+          <button type="button" class="multi-btn" id="branchBtn">Todas as filiais</button>
+          <div class="multi-menu" id="branchMenu">
+            <label class="multi-option"><input type="checkbox" value="0114" checked>0114 - Lapa</label>
+            <label class="multi-option"><input type="checkbox" value="0109" checked>0109 - Sorocaba</label>
+            <label class="multi-option"><input type="checkbox" value="0104" checked>0104 - Joinville</label>
+            <label class="multi-option"><input type="checkbox" value="0116" checked>0116 - Praia Grande</label>
+            <div class="multi-actions">
+              <button type="button" id="selectAllBranches">Todas</button>
+              <button type="button" id="clearBranches">Limpar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <h2 class="section-title">Visão geral</h2>
+    <div class="period-label" id="periodLabel">Carregando período...</div>
+
+    <section class="cards">
+      <div class="metric"><div class="tag">R$</div><div class="metric-title">Faturamento total</div><div class="metric-value" id="totalRevenue">R$ 0</div><div class="metric-foot" id="totalFoot"></div></div>
+      <div class="metric"><div class="tag">MÊS</div><div class="metric-title">Média mensal</div><div class="metric-value" id="avgMonthly">R$ 0</div><div class="metric-foot" id="avgFoot"></div></div>
+      <div class="metric"><div class="tag">DIA</div><div class="metric-title">Média diária</div><div class="metric-value" id="avgDaily">R$ 0</div><div class="metric-foot" id="dailyFoot"></div></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Evolução mensal por filial</h3>
+          <div class="panel-sub" id="lineInfo">0 meses • 4 filiais</div>
+        </div>
+        <div id="lineChart"></div>
+        <div class="empty" id="emptyLine">Sem dados para o período selecionado.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Participação no faturamento</h3>
+        </div>
+        <div id="donutChart"></div>
+        <div class="legend-list" id="donutLegend"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const EMBEDDED_ROWS = [{"date": "2026-01-05", "0104": 0.0, "0109": 71906.25, "0114": 284015.89, "0116": 28702.78}, {"date": "2026-01-06", "0104": 0.0, "0109": 91203.91, "0114": 549843.67, "0116": 31046.5}, {"date": "2026-01-07", "0104": 0.0, "0109": 92317.07, "0114": 1114406.45, "0116": 17403.49}, {"date": "2026-01-08", "0104": 0.0, "0109": 81392.93, "0114": 1488089.39, "0116": 146834.12}, {"date": "2026-01-09", "0104": 0.0, "0109": 66769.57, "0114": 891065.3, "0116": 66546.59}, {"date": "2026-01-10", "0104": 0.0, "0109": 9088.85, "0114": 26256.29, "0116": 2177.9}, {"date": "2026-01-12", "0104": 0.0, "0109": 98670.03, "0114": 805336.89, "0116": 125225.61}, {"date": "2026-01-13", "0104": 0.0, "0109": 67993.15, "0114": 813738.35, "0116": 37215.46}, {"date": "2026-01-14", "0104": 0.0, "0109": 126129.78, "0114": 836798.34, "0116": 99750.02}, {"date": "2026-01-15", "0104": 0.0, "0109": 118182.49, "0114": 978008.84, "0116": 58625.51}, {"date": "2026-01-16", "0104": 0.0, "0109": 93716.48, "0114": 562734.61, "0116": 32381.15}, {"date": "2026-01-17", "0104": 0.0, "0109": 20447.27, "0114": 134814.91, "0116": 35193.97}, {"date": "2026-01-19", "0104": 0.0, "0109": 24444.31, "0114": 403253.73, "0116": 36989.18}, {"date": "2026-01-20", "0104": 0.0, "0109": 82526.68, "0114": 536969.08, "0116": 71495.63}, {"date": "2026-01-21", "0104": 0.0, "0109": 84521.76, "0114": 856105.38, "0116": 423965.5}, {"date": "2026-01-22", "0104": 0.0, "0109": 78298.57, "0114": 726585.6, "0116": 150841.98}, {"date": "2026-01-23", "0104": 0.0, "0109": 70274.01, "0114": 421889.17, "0116": 95226.79}, {"date": "2026-01-24", "0104": 0.0, "0109": 150740.98, "0114": 322245.27, "0116": 0.0}, {"date": "2026-01-26", "0104": 0.0, "0109": 63379.31, "0114": 697611.4, "0116": 227214.13}, {"date": "2026-01-27", "0104": 0.0, "0109": 111137.99, "0114": 886897.73, "0116": 113064.71}, {"date": "2026-01-28", "0104": 0.0, "0109": 123863.44, "0114": 358800.4, "0116": 43459.97}, {"date": "2026-01-29", "0104": 0.0, "0109": 346552.34, "0114": 966175.06, "0116": 351362.8}, {"date": "2026-01-30", "0104": 0.0, "0109": 88883.23, "0114": 2296078.27, "0116": 61304.94}, {"date": "2026-01-31", "0104": 0.0, "0109": 12931.69, "0114": 661423.4, "0116": 28375.95}, {"date": "2026-02-02", "0104": 0.0, "0109": 141582.8, "0114": 457048.25, "0116": 12742.7}, {"date": "2026-02-03", "0104": 0.0, "0109": 96832.76, "0114": 1244428.77, "0116": 46626.18}, {"date": "2026-02-04", "0104": 9534.22, "0109": 62114.08, "0114": 893198.81, "0116": 81556.53}, {"date": "2026-02-05", "0104": 0.0, "0109": 530617.7, "0114": 872744.08, "0116": 180970.53}, {"date": "2026-02-06", "0104": 5067.6, "0109": 50044.46, "0114": 760766.67, "0116": 58301.65}, {"date": "2026-02-07", "0104": 0.0, "0109": 30283.92, "0114": 355491.61, "0116": 27847.45}, {"date": "2026-02-09", "0104": 808.68, "0109": 71801.65, "0114": 604807.56, "0116": 26783.38}, {"date": "2026-02-10", "0104": 0.0, "0109": 125636.91, "0114": 543795.88, "0116": 21156.64}, {"date": "2026-02-11", "0104": 1657.18, "0109": 60337.55, "0114": 1012748.61, "0116": 186522.15}, {"date": "2026-02-12", "0104": 14919.8, "0109": 118287.0, "0114": 824898.81, "0116": 60538.42}, {"date": "2026-02-13", "0104": 2760.55, "0109": 80431.26, "0114": 639690.1, "0116": 66456.58}, {"date": "2026-02-14", "0104": 0.0, "0109": 20009.11, "0114": 16867.5, "0116": 5987.35}, {"date": "2026-02-18", "0104": 23056.0, "0109": 83728.08, "0114": 1520881.7, "0116": 77196.07}, {"date": "2026-02-19", "0104": 20710.59, "0109": 150836.3, "0114": 1052504.14, "0116": 361975.78}, {"date": "2026-02-20", "0104": 43033.43, "0109": 74881.86, "0114": 1695564.58, "0116": 129277.03}, {"date": "2026-02-21", "0104": 0.0, "0109": 116989.45, "0114": 188419.42, "0116": 4661.67}, {"date": "2026-02-23", "0104": 19692.02, "0109": 53085.94, "0114": 961635.05, "0116": 193037.01}, {"date": "2026-02-24", "0104": 7454.0, "0109": 137586.35, "0114": 1404529.1, "0116": 74109.99}, {"date": "2026-02-25", "0104": 92032.0, "0109": 95053.47, "0114": 1874072.78, "0116": 81779.36}, {"date": "2026-02-26", "0104": 5945.0, "0109": 125771.32, "0114": 1121731.28, "0116": 68110.21}, {"date": "2026-02-27", "0104": 119279.0, "0109": 82477.38, "0114": 1161916.74, "0116": 93580.02}, {"date": "2026-02-28", "0104": 0.0, "0109": 156438.3, "0114": 539885.85, "0116": 129481.64}, {"date": "2026-03-02", "0104": 70124.45, "0109": 72560.03, "0114": 456096.67, "0116": 68158.33}, {"date": "2026-03-03", "0104": 36554.9, "0109": 93357.01, "0114": 1303247.13, "0116": 31351.18}, {"date": "2026-03-04", "0104": 9586.8, "0109": 137794.94, "0114": 483039.11, "0116": 55279.58}, {"date": "2026-03-05", "0104": 628.5, "0109": 90546.21, "0114": 414040.58, "0116": 211437.33}, {"date": "2026-03-06", "0104": 328817.58, "0109": 107409.75, "0114": 542830.88, "0116": 285007.92}, {"date": "2026-03-07", "0104": 0.0, "0109": 76243.65, "0114": 262548.37, "0116": 3506.5}, {"date": "2026-03-09", "0104": 0.0, "0109": 30764.48, "0114": 516727.48, "0116": 47917.52}, {"date": "2026-03-10", "0104": 29795.58, "0109": 65922.95, "0114": 744860.52, "0116": 115255.23}, {"date": "2026-03-11", "0104": 17796.88, "0109": 141830.18, "0114": 1028763.6, "0116": 20791.48}, {"date": "2026-03-12", "0104": 56437.9, "0109": 187986.41, "0114": 759229.45, "0116": 86669.84}, {"date": "2026-03-13", "0104": 26293.9, "0109": 94617.39, "0114": 1149392.75, "0116": 121790.68}, {"date": "2026-03-14", "0104": 0.0, "0109": 29379.78, "0114": 179048.67, "0116": 38365.48}, {"date": "2026-03-16", "0104": 110879.08, "0109": 79051.58, "0114": 545178.1, "0116": 33578.15}, {"date": "2026-03-17", "0104": 60320.87, "0109": 61422.93, "0114": 1014954.21, "0116": 82688.92}, {"date": "2026-03-18", "0104": 175830.16, "0109": 220713.3, "0114": 431637.69, "0116": 66276.83}, {"date": "2026-03-19", "0104": 73399.42, "0109": 75982.16, "0114": 504894.01, "0116": 84626.13}, {"date": "2026-03-20", "0104": 80754.75, "0109": 37827.43, "0114": 901968.17, "0116": 153051.9}, {"date": "2026-03-21", "0104": 0.0, "0109": 53583.18, "0114": 445491.59, "0116": 28971.65}, {"date": "2026-03-23", "0104": 23798.92, "0109": 96602.32, "0114": 841787.16, "0116": 48825.46}, {"date": "2026-03-24", "0104": 95849.9, "0109": 60234.28, "0114": 989004.27, "0116": 140966.82}, {"date": "2026-03-25", "0104": 22091.72, "0109": 75438.51, "0114": 618901.0, "0116": 182518.86}, {"date": "2026-03-26", "0104": 49215.27, "0109": 104896.17, "0114": 796883.95, "0116": 59139.51}, {"date": "2026-03-27", "0104": 41268.91, "0109": 40141.81, "0114": 1099401.91, "0116": 77097.16}, {"date": "2026-03-28", "0104": 0.0, "0109": 12009.07, "0114": 344742.41, "0116": 202444.94}, {"date": "2026-03-30", "0104": 62331.62, "0109": 79367.88, "0114": 1190293.21, "0116": 35092.06}, {"date": "2026-03-31", "0104": 179574.67, "0109": 171640.32, "0114": 1683030.77, "0116": 188797.22}, {"date": "2026-04-01", "0104": 11843.1, "0109": 44185.82, "0114": 518399.69, "0116": 51166.65}, {"date": "2026-04-02", "0104": 2425.86, "0109": 80162.53, "0114": 825070.58, "0116": 101268.5}, {"date": "2026-04-04", "0104": 0.0, "0109": 41161.04, "0114": 249709.53, "0116": 6061.34}, {"date": "2026-04-06", "0104": 29913.97, "0109": 74817.15, "0114": 1419985.13, "0116": 56907.03}, {"date": "2026-04-07", "0104": 155347.9, "0109": 39441.39, "0114": 1104778.15, "0116": 112665.57}, {"date": "2026-04-08", "0104": 11775.39, "0109": 43254.94, "0114": 817482.46, "0116": 54733.59}, {"date": "2026-04-09", "0104": 50629.89, "0109": 82600.04, "0114": 933444.39, "0116": 106049.96}, {"date": "2026-04-10", "0104": 2804.0, "0109": 84926.98, "0114": 1117274.85, "0116": 40402.5}, {"date": "2026-04-11", "0104": 0.0, "0109": 37260.09, "0114": 343431.98, "0116": 6963.67}, {"date": "2026-04-13", "0104": 11678.15, "0109": 26168.23, "0114": 909423.78, "0116": 82551.86}, {"date": "2026-04-14", "0104": 28741.84, "0109": 58517.84, "0114": 1035828.4, "0116": 213452.85}, {"date": "2026-04-15", "0104": 89718.05, "0109": 139035.57, "0114": 928382.86, "0116": 20059.6}, {"date": "2026-04-16", "0104": 7069.57, "0109": 87081.93, "0114": 862711.88, "0116": 37148.04}, {"date": "2026-04-17", "0104": 81501.69, "0109": 84455.53, "0114": 1613416.73, "0116": 117616.03}, {"date": "2026-04-18", "0104": 0.0, "0109": 69522.51, "0114": 522567.29, "0116": 5228.2}, {"date": "2026-04-20", "0104": 34956.0, "0109": 9026.92, "0114": 848535.58, "0116": 0.0}, {"date": "2026-04-21", "0104": 0.0, "0109": 0.0, "0114": 0.0, "0116": 0.0}, {"date": "2026-04-22", "0104": 68592.82, "0109": 42457.25, "0114": 1053724.24, "0116": 88044.9}, {"date": "2026-04-23", "0104": 10290.79, "0109": 80413.98, "0114": 1253798.09, "0116": 89932.73}, {"date": "2026-04-24", "0104": 52742.88, "0109": 120370.99, "0114": 691831.6, "0116": 48777.66}, {"date": "2026-04-25", "0104": 0.0, "0109": 13161.57, "0114": 273206.63, "0116": 50427.89}, {"date": "2026-04-27", "0104": 46344.2, "0109": 46981.0, "0114": 574764.47, "0116": 38133.88}, {"date": "2026-04-28", "0104": 70024.37, "0109": 160821.92, "0114": 1633078.9, "0116": 42078.09}, {"date": "2026-04-29", "0104": 2450.0, "0109": 85245.71, "0114": 856347.38, "0116": 85055.72}, {"date": "2026-04-30", "0104": 151615.91, "0109": 83633.63, "0114": 1587734.16, "0116": 83813.07}, {"date": "2026-05-02", "0104": 0.0, "0109": 11611.78, "0114": 188838.36, "0116": 1285.75}, {"date": "2026-05-04", "0104": 32691.7, "0109": 66190.45, "0114": 870061.02, "0116": 22236.74}, {"date": "2026-05-05", "0104": 0.0, "0109": 189652.84, "0114": 788191.98, "0116": 118124.7}, {"date": "2026-05-06", "0104": 0.0, "0109": 92851.52, "0114": 898930.53, "0116": 33490.7}, {"date": "2026-05-07", "0104": 23600.95, "0109": 62652.14, "0114": 1159965.32, "0116": 82514.06}, {"date": "2026-05-08", "0104": 26938.8, "0109": 251021.49, "0114": 1447223.14, "0116": 109303.06}, {"date": "2026-05-09", "0104": 0.0, "0109": 27391.46, "0114": 496060.76, "0116": 27448.39}, {"date": "2026-05-11", "0104": 13231.25, "0109": 80603.97, "0114": 707267.85, "0116": 84698.15}, {"date": "2026-05-12", "0104": 34093.17, "0109": 70733.97, "0114": 1184367.81, "0116": 108313.48}, {"date": "2026-05-13", "0104": 341449.76, "0109": 112961.8, "0114": 2266717.83, "0116": 98893.53}, {"date": "2026-05-14", "0104": 3318.2, "0109": 59757.09, "0114": 998777.64, "0116": 101097.19}, {"date": "2026-05-15", "0104": 10581.5, "0109": 126871.36, "0114": 657633.7, "0116": 39638.22}, {"date": "2026-05-16", "0104": 0.0, "0109": 39679.57, "0114": 286690.38, "0116": 9476.95}, {"date": "2026-05-18", "0104": 250.0, "0109": 71520.57, "0114": 667746.84, "0116": 54436.8}, {"date": "2026-05-19", "0104": 53317.6, "0109": 132791.84, "0114": 946498.5, "0116": 105540.87}, {"date": "2026-05-20", "0104": 12283.0, "0109": 132193.88, "0114": 1193166.46, "0116": 113782.65}, {"date": "2026-05-21", "0104": 38913.75, "0109": 65436.76, "0114": 2094690.87, "0116": 244789.69}, {"date": "2026-05-22", "0104": 5139.34, "0109": 60980.09, "0114": 891416.36, "0116": 41089.09}, {"date": "2026-05-23", "0104": 0.0, "0109": 17942.65, "0114": 135491.45, "0116": 5933.16}, {"date": "2026-05-25", "0104": 9200.85, "0109": 127201.47, "0114": 852511.59, "0116": 67766.31}, {"date": "2026-05-26", "0104": 1799.12, "0109": 85617.55, "0114": 992703.31, "0116": 113442.82}, {"date": "2026-05-27", "0104": 17061.01, "0109": 124723.43, "0114": 603545.96, "0116": 38165.42}, {"date": "2026-05-28", "0104": 8085.16, "0109": 135672.42, "0114": 1249518.7, "0116": 54642.68}, {"date": "2026-05-29", "0104": 21960.52, "0109": 61433.97, "0114": 901263.74, "0116": 174994.99}, {"date": "2026-05-30", "0104": 0.0, "0109": 19874.25, "0114": 734553.94, "0116": 2676.52}];
+
+    const BRANCHES = {
+      "0104": { label: "0104 - Joinville", full: "0104 - COB JOINVILLE", color: "#38bdf8" },
+      "0109": { label: "0109 - Sorocaba", full: "0109 - COB - SOROCABA", color: "#60a5fa" },
+      "0114": { label: "0114 - Lapa", full: "0114 - COB - LAPA", color: "#2563eb" },
+      "0116": { label: "0116 - Praia Grande", full: "0116 - COB - Praia - New", color: "#93c5fd" }
+    };
+    const BRANCH_ORDER = ["0114","0109","0104","0116"];
+    const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+    let rawRows = EMBEDDED_ROWS;
+    let lineChart, donutChart;
+
+    const fmtBRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+    const fmtBRLFull = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtPct = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+    function parseBRNumber(value){
+      if(value === null || value === undefined || value === "") return 0;
+      if(typeof value === "number") return Number.isFinite(value) ? value : 0;
+      let s = String(value).trim().replace(/R\$/g, "").replace(/\s/g, "");
+      if(!s || s.toLowerCase() === "nan") return 0;
+      if(s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function parseDate(value){
+      if(!value) return null;
+      if(value instanceof Date && !isNaN(value)) return value;
+      if(typeof value === "number"){
+        const utc = Math.round((value - 25569) * 86400 * 1000);
+        return new Date(utc);
+      }
+      const s = String(value).trim();
+      let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if(m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+      m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if(m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+      const d = new Date(s);
+      return isNaN(d) ? null : d;
+    }
+
+    function toISODate(d){
+      const pad = n => String(n).padStart(2,"0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+
+    function monthKeyFromDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
+    function monthLabel(key){
+      const [y,m] = key.split("-").map(Number);
+      return `${MONTHS[m-1]}/${String(y).slice(-2)}`;
+    }
+
+    function normalizeImportedRows(jsonRows){
+      const result = [];
+      for(const row of jsonRows){
+        const keys = Object.keys(row);
+        const dateKey = keys.find(k => String(k).trim().toLowerCase() === "data") || keys.find(k => /data/i.test(k));
+        const date = parseDate(row[dateKey]);
+        if(!date) continue;
+        const out = { date: toISODate(date) };
+        for(const code of BRANCH_ORDER){
+          const foundKey = keys.find(k => String(k).includes(code)) || BRANCHES[code].full;
+          out[code] = parseBRNumber(row[foundKey]);
+        }
+        result.push(out);
+      }
+      return result;
+    }
+
+    function parseTextTable(text){
+      const lines = text.trim().split(/\r?\n/).filter(Boolean);
+      if(!lines.length) return [];
+      const sep = lines[0].includes("\t") ? "\t" : ";";
+      const headers = lines[0].split(sep).map(h => h.trim() || "col");
+      const rows = lines.slice(1).map(line => {
+        const cells = line.split(sep);
+        const obj = {};
+        headers.forEach((h,i) => obj[h] = cells[i] ?? "");
+        return obj;
+      });
+      return normalizeImportedRows(rows);
+    }
+
+    function getFilteredRows(){
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+      return rawRows.filter(r => (!start || r.date >= start) && (!end || r.date <= end));
+    }
+
+    function aggregateMonthly(rows){
+      const map = new Map();
+      for(const r of rows){
+        const d = parseDate(r.date);
+        if(!d) continue;
+        const key = monthKeyFromDate(d);
+        if(!map.has(key)) map.set(key, { key, label: monthLabel(key), "0104":0, "0109":0, "0114":0, "0116":0 });
+        const m = map.get(key);
+        for(const code of BRANCH_ORDER) m[code] += Number(r[code] || 0);
+      }
+      return [...map.values()].sort((a,b) => a.key.localeCompare(b.key));
+    }
+
+    function totalsByBranch(rows){
+      const totals = {"0104":0,"0109":0,"0114":0,"0116":0};
+      for(const r of rows){ for(const code of BRANCH_ORDER) totals[code] += Number(r[code] || 0); }
+      return totals;
+    }
+
+    function setupDateFilters(){
+      if(!rawRows.length) return;
+      const dates = rawRows.map(r => r.date).sort();
+      const min = dates[0], max = dates[dates.length-1];
+      const start = document.getElementById("startDate"), end = document.getElementById("endDate");
+      start.min = min; start.max = max; end.min = min; end.max = max;
+      start.value = min; end.value = max;
+    }
+
+    function updateDashboard(){
+      const rows = getFilteredRows();
+      const monthly = aggregateMonthly(rows);
+      const activeCodes = getSelectedBranches();
+      const totals = totalsByBranch(rows);
+      const totalSelected = activeCodes.reduce((s,c)=>s+totals[c],0);
+      const monthsCount = monthly.length;
+      const uniqueDays = new Set(rows.map(r => r.date)).size;
+
+      document.getElementById("periodLabel").textContent = rows.length ? `${formatDateBR(document.getElementById("startDate").value)} a ${formatDateBR(document.getElementById("endDate").value)}` : "Sem dados no período selecionado";
+      document.getElementById("totalRevenue").textContent = fmtBRL.format(totalSelected);
+      document.getElementById("totalFoot").textContent = "";
+      document.getElementById("avgMonthly").textContent = fmtBRL.format(monthsCount ? totalSelected / monthsCount : 0);
+      document.getElementById("avgFoot").textContent = "";
+      document.getElementById("avgDaily").textContent = fmtBRL.format(uniqueDays ? totalSelected / uniqueDays : 0);
+      document.getElementById("dailyFoot").textContent = "";
+
+      renderLine(monthly, activeCodes);
+      renderDonut(totals, totalSelected, activeCodes);
+    }
+
+    function formatDateBR(iso){
+      if(!iso) return "";
+      const [y,m,d] = iso.split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    function renderLine(monthly, activeCodes){
+      document.getElementById("lineInfo").textContent = `${monthly.length} meses • ${activeCodes.length} filiais`;
+      const series = activeCodes.map(code => ({
+        name: BRANCHES[code].label,
+        data: monthly.map(m => Math.round(m[code]))
+      }));
+      const categories = monthly.map(m => m.label);
+      const opts = {
+        chart: { type:"line", height:500, toolbar:{show:false}, zoom:{enabled:false}, foreColor:"#9fc3eb", background:"transparent", fontFamily:"Inter, sans-serif" },
+        series,
+        colors: activeCodes.map(c => BRANCHES[c].color),
+        stroke: { width:4, curve:"smooth", lineCap:"round" },
+        markers: { size:5, strokeWidth:0, hover:{size:7} },
+        grid: { borderColor:"rgba(147,197,253,.14)", strokeDashArray:0, padding:{left:12,right:16} },
+        xaxis: { categories, labels:{style:{colors:"#bfdbfe",fontWeight:700}}, axisBorder:{color:"rgba(147,197,253,.25)"}, axisTicks:{show:false} },
+        yaxis: { labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} },
+        legend: { show:false },
+        tooltip: { theme:"dark", y:{formatter:v => fmtBRLFull.format(v)} },
+        noData: { text:"Sem dados para exibir", style:{color:"#bfdbfe"} }
+      };
+      document.getElementById("emptyLine").style.display = monthly.length ? "none" : "block";
+      if(lineChart){ lineChart.updateOptions(opts, true, true); }
+      else { lineChart = new ApexCharts(document.querySelector("#lineChart"), opts); lineChart.render(); }
+    }
+
+    function renderDonut(totals, totalSelected, activeCodes){
+      const values = activeCodes.map(c => Math.round(totals[c]));
+      const opts = {
+        chart: { type:"donut", height:365, toolbar:{show:false}, background:"transparent", fontFamily:"Inter, sans-serif", events:{ dataPointSelection:function(event, chartContext, config){ const code = activeCodes[config.dataPointIndex]; if(code){ setSelectedBranches([code]); updateDashboard(); } } } },
+        series: values,
+        labels: activeCodes.map(c => BRANCHES[c].label),
+        colors: activeCodes.map(c => BRANCHES[c].color),
+        stroke: { width:0 },
+        dataLabels: { enabled:true, formatter: val => `${fmtPct.format(val)}%`, style:{fontSize:"12px", fontWeight:900, colors:["#06101d"]}, dropShadow:{enabled:false} },
+        legend: { show:false },
+        tooltip: { theme:"dark", y:{ formatter:v => fmtBRLFull.format(v) } },
+        plotOptions: { pie:{ donut:{ size:"67%", labels:{ show:true, name:{show:true,color:"#93c5fd",fontSize:"13px",fontWeight:800}, value:{show:true,color:"#f8fbff",fontSize:"28px",fontWeight:900,formatter:()=>fmtBRL.format(totalSelected)}, total:{show:true,label:"Total",color:"#93c5fd",fontSize:"14px",fontWeight:900,formatter:()=>fmtBRL.format(totalSelected)} } } } }
+      };
+      if(donutChart){ donutChart.updateOptions(opts); donutChart.updateSeries(values); }
+      else { donutChart = new ApexCharts(document.querySelector("#donutChart"), opts); donutChart.render(); }
+      renderDonutLegend(totals, totalSelected, activeCodes);
+    }
+
+    function renderDonutLegend(totals, totalSelected, activeCodes){
+      const el = document.getElementById("donutLegend");
+      el.innerHTML = activeCodes.map(code => {
+        const value = totals[code] || 0;
+        const pct = totalSelected ? (value / totalSelected) * 100 : 0;
+        return `<div class="legend-item" data-branch="${code}">
+          <div class="legend-name"><span class="dot" style="background:${BRANCHES[code].color}"></span>${BRANCHES[code].label}</div>
+          <div class="legend-value">${fmtBRL.format(value)}</div>
+          <div class="legend-pct">${fmtPct.format(pct)}%</div>
+        </div>`;
+      }).join("");
+      el.querySelectorAll(".legend-item").forEach(item => {
+        item.addEventListener("click", () => { setSelectedBranches([item.dataset.branch]); updateDashboard(); });
+        item.style.cursor = "pointer";
+      });
+    }
+
+    function getSelectedBranches(){
+      const checked = [...document.querySelectorAll('#branchMenu input[type="checkbox"]:checked')].map(i => i.value);
+      return checked.length ? checked : BRANCH_ORDER.slice();
+    }
+
+    function setSelectedBranches(codes){
+      document.querySelectorAll('#branchMenu input[type="checkbox"]').forEach(input => input.checked = codes.includes(input.value));
+      updateBranchButton();
+    }
+
+    function updateBranchButton(){
+      const selected = getSelectedBranches();
+      const btn = document.getElementById("branchBtn");
+      if(selected.length === BRANCH_ORDER.length) btn.textContent = "Todas as filiais";
+      else if(selected.length === 1) btn.textContent = BRANCHES[selected[0]].label;
+      else btn.textContent = `${selected.length} filiais selecionadas`;
+    }
+
+    function bestDayOfMonth(rows, activeCodes){
+      const byDay = new Map();
+      for(const r of rows){
+        const d = parseDate(r.date);
+        if(!d) continue;
+        const day = d.getDate();
+        const value = activeCodes.reduce((s,c)=>s+Number(r[c] || 0),0);
+        byDay.set(day, (byDay.get(day) || 0) + value);
+      }
+      let best = {day:null, value:0};
+      byDay.forEach((value, day) => { if(value > best.value) best = {day, value}; });
+      return best;
+    }
+
+    function compactBRL(value){
+      const abs = Math.abs(value || 0);
+      if(abs >= 1_000_000) return `R$ ${(value/1_000_000).toLocaleString("pt-BR",{maximumFractionDigits:1})} mi`;
+      if(abs >= 1_000) return `R$ ${(value/1_000).toLocaleString("pt-BR",{maximumFractionDigits:0})} mil`;
+      return fmtBRL.format(value || 0);
+    }
+
+    document.getElementById("clearBtn").addEventListener("click", () => { setupDateFilters(); setSelectedBranches(BRANCH_ORDER.slice()); updateDashboard(); });
+    document.getElementById("startDate").addEventListener("change", updateDashboard);
+    document.getElementById("endDate").addEventListener("change", updateDashboard);
+    document.getElementById("branchBtn").addEventListener("click", () => document.getElementById("branchMulti").classList.toggle("open"));
+    document.getElementById("selectAllBranches").addEventListener("click", () => { setSelectedBranches(BRANCH_ORDER.slice()); updateDashboard(); });
+    document.getElementById("clearBranches").addEventListener("click", () => { setSelectedBranches([]); updateDashboard(); });
+    document.querySelectorAll('#branchMenu input[type="checkbox"]').forEach(input => input.addEventListener("change", () => { updateBranchButton(); updateDashboard(); }));
+    document.addEventListener("click", (e) => { if(!document.getElementById("branchMulti").contains(e.target)) document.getElementById("branchMulti").classList.remove("open"); });
+
+    setupDateFilters();
+    updateBranchButton();
+    updateDashboard();
+  </script>
+</body>
+</html>
