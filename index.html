@@ -146,6 +146,75 @@
     .legend-pct{color:#7dd3fc;white-space:nowrap}
     .hint{margin-top:18px;color:#85a7cf;font-size:12px;font-weight:700;line-height:1.5}
     .empty{display:none;margin-top:18px;border:1px dashed rgba(125,211,252,.45);border-radius:18px;padding:18px;color:#bfdbfe;background:rgba(14,165,233,.07);font-weight:700}
+
+    /* Correção para impressão: evita que o ApexCharts ultrapasse o painel */
+    .chart-box, #lineChart, #donutChart{width:100%;max-width:100%;overflow:hidden}
+    #lineChart .apexcharts-canvas, #lineChart .apexcharts-svg,
+    #donutChart .apexcharts-canvas, #donutChart .apexcharts-svg{max-width:100% !important}
+
+    body.print-mode .actions, body.print-mode .filters { display: none !important; }
+    body.print-mode main { padding: 14px !important; }
+    body.print-mode .cards { grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; margin-bottom: 10px !important; }
+    body.print-mode .metric { min-height: 102px !important; padding: 14px 16px !important; border-radius: 16px !important; box-shadow: none !important; }
+    body.print-mode .metric .tag { display: none !important; }
+    body.print-mode .metric-title { font-size: 10px !important; margin-bottom: 8px !important; }
+    body.print-mode .metric-value { font-size: 25px !important; margin-bottom: 4px !important; }
+    body.print-mode .metric-foot { font-size: 11px !important; }
+    body.print-mode .grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, .78fr) !important; gap: 10px !important; align-items: stretch !important; }
+    body.print-mode .panel { padding: 14px !important; border-radius: 16px !important; box-shadow: none !important; min-width:0 !important; overflow:hidden !important; }
+    body.print-mode #lineChart { min-height: 380px !important; height: 380px !important; }
+    body.print-mode #donutChart { min-height: 255px !important; height: 255px !important; }
+
+
+    @media print {
+      @page { size: A4 landscape; margin: 8mm; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body {
+        width: 297mm;
+        min-height: 210mm;
+        background: #07111f !important;
+        color: #f4f8ff !important;
+        overflow: visible !important;
+      }
+      body {
+        background:
+          radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 28%),
+          linear-gradient(180deg,#061020 0%, #08182a 100%) !important;
+      }
+      .topbar {
+        position: static !important;
+        padding: 12px 14px 10px !important;
+        border-bottom: 1px solid rgba(96,165,250,.25) !important;
+        background: rgba(5,12,24,.9) !important;
+        backdrop-filter: none !important;
+      }
+      .header-row { margin-bottom: 0 !important; }
+      .logo { width: 44px !important; height: 44px !important; border-radius: 14px !important; font-size: 24px !important; }
+      .kicker { font-size: 10px !important; }
+      h1 { font-size: 23px !important; }
+      .actions, .filters { display: none !important; }
+      main { padding: 14px !important; }
+      .section-title { font-size: 23px !important; margin-bottom: 2px !important; }
+      .period-label { margin-bottom: 10px !important; font-size: 12px !important; }
+      .cards { grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; margin-bottom: 10px !important; page-break-inside: avoid !important; }
+      .metric { min-height: 102px !important; padding: 14px 16px !important; border-radius: 16px !important; box-shadow: none !important; }
+      .metric .tag { display: none !important; }
+      .metric-title { font-size: 10px !important; margin-bottom: 8px !important; }
+      .metric-value { font-size: 25px !important; margin-bottom: 4px !important; }
+      .metric-foot { font-size: 11px !important; }
+      .grid { grid-template-columns: 1.45fr .8fr !important; gap: 10px !important; align-items: stretch !important; page-break-inside: avoid !important; }
+      .panel { padding: 14px !important; border-radius: 16px !important; box-shadow: none !important; page-break-inside: avoid !important; }
+      .panel-header { margin-bottom: 6px !important; }
+      .panel-title { font-size: 17px !important; }
+      .panel-sub { font-size: 10px !important; }
+      #lineChart { min-height: 380px !important; height: 380px !important; overflow:hidden !important; }
+      #donutChart { min-height: 255px !important; height: 255px !important; overflow:hidden !important; }
+      #lineChart .apexcharts-canvas, #lineChart .apexcharts-svg, #donutChart .apexcharts-canvas, #donutChart .apexcharts-svg { width: 100% !important; max-width: 100% !important; }
+      .legend-list { gap: 6px !important; margin-top: 4px !important; }
+      .legend-item { padding: 8px 9px !important; border-radius: 10px !important; font-size: 10px !important; gap: 7px !important; grid-template-columns: 1fr auto auto !important; }
+      .dot { width: 8px !important; height: 8px !important; }
+      .hint, .empty { display: none !important; }
+    }
     @media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}
     @media(max-width:760px){
       .topbar{padding:20px 16px}.header-row{align-items:flex-start;flex-direction:column}.actions{width:100%;justify-content:stretch}.actions button,.actions .file-btn{flex:1;text-align:center}
@@ -165,6 +234,7 @@
         </div>
       </div>
       <div class="actions">
+        <button id="printBtn">Imprimir PDF</button>
         <button id="clearBtn">Limpar filtros</button>
       </div>
     </div>
@@ -478,14 +548,14 @@
       }));
       const categories = monthly.map(m => m.label);
       const opts = {
-        chart: { type:"line", height:500, toolbar:{show:false}, zoom:{enabled:false}, foreColor:"#9fc3eb", background:"transparent", fontFamily:"Inter, sans-serif" },
+        chart: { type:"line", height:500, width:"100%", toolbar:{show:false}, zoom:{enabled:false}, foreColor:"#9fc3eb", background:"transparent", fontFamily:"Inter, sans-serif", redrawOnParentResize:true, redrawOnWindowResize:true, parentHeightOffset:0 },
         series,
         colors: activeCodes.map(c => BRANCHES[c].color),
         stroke: { width:4, curve:"smooth", lineCap:"round" },
         markers: { size:5, strokeWidth:0, hover:{size:7} },
-        grid: { borderColor:"rgba(147,197,253,.14)", strokeDashArray:0, padding:{left:12,right:16} },
+        grid: { borderColor:"rgba(147,197,253,.14)", strokeDashArray:0, padding:{left:18,right:34,top:12,bottom:8} },
         xaxis: { categories, labels:{style:{colors:"#bfdbfe",fontWeight:700}}, axisBorder:{color:"rgba(147,197,253,.25)"}, axisTicks:{show:false} },
-        yaxis: { labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} },
+        yaxis: { min:0, forceNiceScale:true, tickAmount:5, labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} },
         legend: { show:false },
         tooltip: { theme:"dark", y:{formatter:v => fmtBRLFull.format(v)} },
         noData: { text:"Sem dados para exibir", style:{color:"#bfdbfe"} }
@@ -588,6 +658,44 @@
       return fmtBRL.format(value || 0);
     }
 
+
+    function preparePrint(){
+      document.body.classList.add("print-mode");
+      const selected = getSelectedBranches();
+      if(lineChart){
+        lineChart.updateOptions({
+          chart:{ height:380, width:"100%", redrawOnParentResize:true, redrawOnWindowResize:true, parentHeightOffset:0 },
+          stroke:{ width:3, curve:"straight", lineCap:"round" },
+          markers:{ size:selected.length > 1 ? 4 : 5, strokeWidth:0, hover:{size:7} },
+          grid:{ padding:{left:18,right:38,top:12,bottom:8} },
+          yaxis:{ min:0, forceNiceScale:true, tickAmount:5, labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} }
+        }, false, true);
+      }
+      if(donutChart) donutChart.updateOptions({ chart:{ height:255, width:"100%", parentHeightOffset:0 } }, false, true);
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+        if(lineChart) lineChart.resize();
+        if(donutChart) donutChart.resize();
+        setTimeout(() => window.print(), 350);
+      }, 250);
+    }
+
+    window.addEventListener("afterprint", () => {
+      document.body.classList.remove("print-mode");
+      if(lineChart){
+        lineChart.updateOptions({
+          chart:{ height:500, width:"100%" },
+          stroke:{ width:4, curve:"smooth", lineCap:"round" },
+          markers:{ size:5, strokeWidth:0, hover:{size:7} },
+          grid:{ padding:{left:18,right:34,top:12,bottom:8} },
+          yaxis:{ min:0, forceNiceScale:true, tickAmount:5, labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} }
+        }, false, true);
+      }
+      if(donutChart) donutChart.updateOptions({ chart:{ height:365, width:"100%" } }, false, true);
+      setTimeout(updateDashboard, 150);
+    });
+
+    document.getElementById("printBtn").addEventListener("click", preparePrint);
     document.getElementById("clearBtn").addEventListener("click", () => { setupDateFilters(); setSelectedBranches(BRANCH_ORDER.slice()); setSelectedMonths(getAvailableMonths()); updateDashboard(); });
     document.getElementById("startDate").addEventListener("change", updateDashboard);
     document.getElementById("endDate").addEventListener("change", updateDashboard);
