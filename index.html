@@ -5,886 +5,453 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Previsão de Estoque — CD Recife</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
-  :root {
-    --bg:        #0e1117;
-    --surface:   #161b27;
-    --surface2:  #1e2537;
-    --border:    #2a3248;
-    --accent-h:  #00c2ff;
-    --accent-a:  #ff6b35;
-    --text:      #dce3f0;
-    --text-dim:  #7a89a8;
-    --green:     #29d984;
-    --yellow:    #f5c842;
-    --red:       #ff4d6d;
-    --class-a:   #29d984;
-    --class-b:   #f5c842;
-    --class-c:   #ff6b35;
-    --disc:      #3a4255;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 14px;
-    min-height: 100vh;
-  }
-
-  /* ── HEADER ── */
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 28px 16px;
-    display: flex;
-    align-items: flex-end;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
-
-  .logo-block { flex: 1 1 220px; }
-  .logo-block h1 {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: .04em;
-    color: var(--text);
-  }
-  .logo-block span {
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  .tab-group {
-    display: flex;
-    gap: 4px;
-  }
-
-  .tab-btn {
-    padding: 8px 18px;
-    border-radius: 6px 6px 0 0;
-    border: 1px solid var(--border);
-    border-bottom: none;
-    background: transparent;
-    color: var(--text-dim);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .06em;
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .tab-btn:hover { color: var(--text); background: var(--surface2); }
-  .tab-btn.active.hepr { color: var(--accent-h); border-color: var(--accent-h); background: rgba(0,194,255,.06); }
-  .tab-btn.active.hepratox { color: var(--accent-a); border-color: var(--accent-a); background: rgba(255,107,53,.06); }
-
-  /* ── CONTROLS ── */
-  .controls {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 28px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .ctrl-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; margin-right: 4px; }
-
-  input[type=text], select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 13px;
-    padding: 6px 10px;
-    outline: none;
-    transition: border-color .15s;
-  }
-  input[type=text]:focus, select:focus { border-color: var(--accent-h); }
-  input[type=text] { width: 220px; }
-
-  .check-group { display: flex; gap: 8px; align-items: center; }
-  .check-group label {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 12px; cursor: pointer;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 4px 11px;
-    transition: all .15s;
-  }
-  .check-group label:hover { border-color: var(--text-dim); }
-  .check-group input[type=checkbox] { display: none; }
-  .check-group label.active-a { border-color: var(--class-a); color: var(--class-a); background: rgba(41,217,132,.08); }
-  .check-group label.active-b { border-color: var(--class-b); color: var(--class-b); background: rgba(245,200,66,.08); }
-  .check-group label.active-c { border-color: var(--class-c); color: var(--class-c); background: rgba(255,107,53,.08); }
-
-  .ctrl-sep { width: 1px; height: 28px; background: var(--border); }
-
-  .show-disc-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-dim);
-    font-size: 12px;
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .show-disc-btn.active { border-color: var(--red); color: var(--red); background: rgba(255,77,109,.07); }
-  .show-disc-btn:hover { border-color: var(--text-dim); color: var(--text); }
-
-  .spacer { flex: 1; }
-
-  .btn-export {
-    display: flex; align-items: center; gap: 7px;
-    background: var(--accent-h);
-    color: #000;
-    border: none;
-    border-radius: 6px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .04em;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: opacity .15s;
-  }
-  .btn-export:hover { opacity: .85; }
-  .btn-export.hepratox { background: var(--accent-a); }
-
-  /* ── SUMMARY BAR ── */
-  .summary {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .sum-card {
-    flex: 1;
-    padding: 14px 20px;
-    border-right: 1px solid var(--border);
-    min-width: 0;
-  }
-  .sum-card:last-child { border-right: none; }
-  .sum-card .val {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 20px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sum-card .lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
-  .sum-card.hepr .val  { color: var(--accent-h); }
-  .sum-card.atox .val  { color: var(--accent-a); }
-  .sum-card.disc .val  { color: var(--red); }
-  .sum-card.active-items .val { color: var(--green); }
-
-  /* ── TABLE ── */
-  .table-wrapper {
-    overflow-x: auto;
-    padding: 0 16px 40px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 12px;
-  }
-
-  thead th {
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    border-bottom: 2px solid var(--border);
-    padding: 10px 12px;
-    text-align: left;
-    font-size: 11px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .07em;
-    color: var(--text-dim);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-  }
-  thead th:hover { color: var(--text); }
-  thead th.sort-asc::after  { content: ' ▲'; color: var(--accent-h); }
-  thead th.sort-desc::after { content: ' ▼'; color: var(--accent-h); }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background .1s;
-  }
-  tbody tr:hover { background: var(--surface2); }
-  tbody tr.discontinued {
-    opacity: .45;
-    background: rgba(58,66,85,.2);
-  }
-  tbody tr.discontinued td { text-decoration: line-through; color: var(--text-dim); }
-  tbody tr.discontinued td:first-child { text-decoration: none; }
-
-  td {
-    padding: 9px 12px;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-  td.desc-cell { white-space: normal; min-width: 280px; max-width: 400px; }
-
-  .badge {
-    display: inline-block;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
-    letter-spacing: .05em;
-  }
-  .badge-A { background: rgba(41,217,132,.15); color: var(--class-a); border: 1px solid rgba(41,217,132,.3); }
-  .badge-B { background: rgba(245,200,66,.12); color: var(--class-b); border: 1px solid rgba(245,200,66,.3); }
-  .badge-C { background: rgba(255,107,53,.12); color: var(--class-c); border: 1px solid rgba(255,107,53,.3); }
-
-  .code-cell {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .num-cell { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
-
-  /* editable qty */
-  .qty-wrap { display: flex; align-items: center; gap: 4px; }
-  .qty-input {
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    text-align: right;
-    width: 90px;
-    padding: 3px 6px;
-    transition: all .15s;
-    cursor: pointer;
-  }
-  .qty-input:hover { border-color: var(--border); background: var(--surface2); }
-  .qty-input:focus { border-color: var(--accent-h); background: var(--surface2); outline: none; cursor: text; }
-  .qty-input.modified { color: var(--yellow); border-color: rgba(245,200,66,.4); }
-
-  .total-cell { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
-  .total-hepr  { color: rgba(0,194,255,.9); }
-  .total-atox  { color: rgba(255,107,53,.9); }
-
-  /* disc toggle */
-  .disc-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text-dim);
-    font-size: 11px;
-    padding: 3px 7px;
-    cursor: pointer;
-    transition: all .15s;
-    white-space: nowrap;
-  }
-  .disc-btn:hover { border-color: var(--red); color: var(--red); }
-  .disc-btn.is-disc { border-color: var(--red); color: var(--red); background: rgba(255,77,109,.08); }
-  .disc-btn.is-disc:hover { background: rgba(255,77,109,.15); }
-
-  .empty-msg { text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 14px; }
-
-  /* accent line on active tab */
-  .accent-line { height: 2px; }
-  .accent-line.hepr    { background: var(--accent-h); }
-  .accent-line.hepratox { background: var(--accent-a); }
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+:root{--bg:#0e1117;--sur:#161b27;--sur2:#1e2537;--bdr:#2a3248;--ah:#00c2ff;--aa:#ff6b35;--tx:#dce3f0;--txd:#7a89a8;--gn:#29d984;--yw:#f5c842;--rd:#ff4d6d;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:'IBM Plex Sans',sans-serif;font-size:14px;min-height:100vh;}
+header{background:var(--sur);border-bottom:1px solid var(--bdr);padding:18px 28px 14px;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;}
+.logo h1{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;letter-spacing:.04em;}
+.logo span{font-size:11px;color:var(--txd);letter-spacing:.08em;text-transform:uppercase;}
+.tabs{display:flex;gap:4px;margin-left:auto;}
+.tab{padding:8px 20px;border-radius:6px 6px 0 0;border:1px solid var(--bdr);border-bottom:none;background:transparent;color:var(--txd);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.05em;cursor:pointer;transition:all .15s;}
+.tab:hover{color:var(--tx);background:var(--sur2);}
+.act-h{color:var(--ah)!important;border-color:var(--ah)!important;background:rgba(0,194,255,.07)!important;}
+.act-a{color:var(--aa)!important;border-color:var(--aa)!important;background:rgba(255,107,53,.07)!important;}
+.abar{height:2px;}
+.abar-h{background:var(--ah);}
+.abar-a{background:var(--aa);}
+.ctrl{background:var(--sur);border-bottom:1px solid var(--bdr);padding:11px 28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.clbl{font-size:11px;color:var(--txd);text-transform:uppercase;letter-spacing:.07em;}
+input[type=text]{background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;color:var(--tx);font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:6px 10px;outline:none;transition:border-color .15s;width:210px;}
+input[type=text]:focus{border-color:var(--ah);}
+.cg{display:flex;gap:6px;align-items:center;}
+.cg label{display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:var(--sur2);border:1px solid var(--bdr);border-radius:20px;padding:4px 12px;transition:all .15s;}
+.cg label:hover{border-color:var(--txd);}
+.cg input[type=checkbox]{display:none;}
+.la{border-color:var(--gn)!important;color:var(--gn)!important;background:rgba(41,217,132,.08)!important;}
+.lb{border-color:var(--yw)!important;color:var(--yw)!important;background:rgba(245,200,66,.08)!important;}
+.lc{border-color:#ff6b35!important;color:#ff6b35!important;background:rgba(255,107,53,.08)!important;}
+.sep{width:1px;height:26px;background:var(--bdr);}
+.sdb{display:flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--bdr);border-radius:6px;color:var(--txd);font-size:12px;padding:6px 12px;cursor:pointer;transition:all .15s;}
+.sdb.on{border-color:var(--rd);color:var(--rd);background:rgba(255,77,109,.07);}
+.sdb:hover{border-color:var(--txd);color:var(--tx);}
+.sp{flex:1;}
+.expbtn{display:flex;align-items:center;gap:7px;background:var(--ah);color:#000;border:none;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.04em;padding:8px 16px;cursor:pointer;transition:opacity .15s;}
+.expbtn:hover{opacity:.85;}
+.expbtn.ea{background:var(--aa);}
+.sumbar{display:flex;border-bottom:1px solid var(--bdr);}
+.sc{flex:1;padding:13px 20px;border-right:1px solid var(--bdr);}
+.sc:last-child{border-right:none;}
+.sc .v{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sc .l{font-size:11px;color:var(--txd);text-transform:uppercase;letter-spacing:.07em;margin-top:2px;}
+.sh .v{color:var(--ah);}
+.sa .v{color:var(--aa);}
+.sd .v{color:var(--rd);}
+.sg .v{color:var(--gn);}
+.twrap{overflow-x:auto;padding:0 16px 40px;}
+table{width:100%;border-collapse:collapse;margin-top:12px;}
+thead th{position:sticky;top:0;background:var(--sur);border-bottom:2px solid var(--bdr);padding:9px 12px;text-align:left;font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--txd);white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{color:var(--tx);}
+thead th.sas::after{content:' ▲';color:var(--ah);}
+thead th.sds::after{content:' ▼';color:var(--ah);}
+tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s;}
+tbody tr:hover{background:var(--sur2);}
+tbody tr.disc{opacity:.42;}
+tbody tr.disc td{text-decoration:line-through;color:var(--txd);}
+tbody tr.disc td:first-child,tbody tr.disc td:last-child{text-decoration:none;}
+td{padding:8px 12px;vertical-align:middle;white-space:nowrap;}
+td.dsc{white-space:normal;min-width:280px;max-width:420px;}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.05em;}
+.bA{background:rgba(41,217,132,.14);color:var(--gn);border:1px solid rgba(41,217,132,.3);}
+.bB{background:rgba(245,200,66,.11);color:var(--yw);border:1px solid rgba(245,200,66,.3);}
+.bC{background:rgba(255,107,53,.11);color:#ff6b35;border:1px solid rgba(255,107,53,.3);}
+.cod{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--txd);}
+.nr{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+.qwrap{display:flex;align-items:center;justify-content:flex-end;}
+.qi{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--tx);font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:right;width:90px;padding:3px 6px;transition:all .15s;cursor:pointer;}
+.qi:hover{border-color:var(--bdr);background:var(--sur2);}
+.qi:focus{border-color:var(--ah);background:var(--sur2);outline:none;cursor:text;}
+.qi.mod{color:var(--yw);border-color:rgba(245,200,66,.35);}
+.th{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
+.th-h{color:rgba(0,194,255,.9);}
+.th-a{color:rgba(255,107,53,.9);}
+.db{background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--txd);font-size:11px;padding:3px 8px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.db:hover{border-color:var(--rd);color:var(--rd);}
+.db.on{border-color:var(--rd);color:var(--rd);background:rgba(255,77,109,.08);}
+.db.on:hover{background:rgba(255,77,109,.15);}
+.empty{text-align:center;padding:60px;color:var(--txd);}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo-block">
+  <div class="logo">
     <h1>CD RECIFE — PREVISÃO DE ESTOQUE</h1>
     <span>Cenários de abertura · Jun 2025</span>
   </div>
-  <div class="tab-group">
-    <button class="tab-btn hepr active" onclick="switchTab('hepr')">HEPR</button>
-    <button class="tab-btn hepratox" onclick="switchTab('hepratox')">HEPR ATOX</button>
+  <div class="tabs">
+    <button class="tab act-h" id="th" onclick="sw('h')">HEPR</button>
+    <button class="tab" id="ta" onclick="sw('a')">HEPR ATOX</button>
   </div>
 </header>
-
-<div id="accent-bar" class="accent-line hepr"></div>
-
-<div class="controls">
-  <span class="ctrl-label">Buscar</span>
-  <input type="text" id="searchInput" placeholder="código, descrição…" oninput="applyFilters()">
-
-  <div class="ctrl-sep"></div>
-
-  <span class="ctrl-label">Classe</span>
-  <div class="check-group">
-    <label id="lbl-a" class="active-a" onclick="toggleClass('A')"><input type="checkbox" id="chk-a" checked> A</label>
-    <label id="lbl-b" class="active-b" onclick="toggleClass('B')"><input type="checkbox" id="chk-b" checked> B</label>
-    <label id="lbl-c" class="active-c" onclick="toggleClass('C')"><input type="checkbox" id="chk-c" checked> C</label>
+<div class="abar abar-h" id="ab"></div>
+<div class="ctrl">
+  <span class="clbl">Buscar</span>
+  <input type="text" id="si" placeholder="código ou descrição…" oninput="render()">
+  <div class="sep"></div>
+  <span class="clbl">Classe</span>
+  <div class="cg">
+    <label id="lA" class="la" onclick="tgc('A')"><input type="checkbox" id="cA" checked> A</label>
+    <label id="lB" class="lb" onclick="tgc('B')"><input type="checkbox" id="cB" checked> B</label>
+    <label id="lC" class="lc" onclick="tgc('C')"><input type="checkbox" id="cC" checked> C</label>
   </div>
-
-  <div class="ctrl-sep"></div>
-
-  <button class="show-disc-btn" id="showDiscBtn" onclick="toggleShowDisc()">
-    <span>👁</span> Mostrar descontinuados
-  </button>
-
-  <div class="spacer"></div>
-
-  <button class="btn-export" id="exportBtn" onclick="exportCSV()">⬇ Exportar CSV</button>
+  <div class="sep"></div>
+  <button class="sdb" id="sdb" onclick="tgd()">👁 Mostrar descontinuados</button>
+  <div class="sp"></div>
+  <button class="expbtn" id="eb" onclick="exp()">⬇ Exportar CSV</button>
 </div>
-
-<!-- SUMMARY -->
-<div class="summary" id="summaryBar"></div>
-
-<!-- TABLE -->
-<div class="table-wrapper">
-  <table id="mainTable">
+<div class="sumbar" id="sumbar"></div>
+<div class="twrap">
+  <table>
     <thead>
       <tr>
-        <th onclick="sortBy('codigo')">Código</th>
-        <th onclick="sortBy('descricao')">Descrição</th>
-        <th onclick="sortBy('classe')">Classe</th>
-        <th onclick="sortBy('qtd')" style="text-align:right">Qtd Ideal</th>
-        <th onclick="sortBy('unitario')" style="text-align:right">Vlr Unit.</th>
-        <th onclick="sortBy('total')" style="text-align:right">Total</th>
-        <th style="text-align:center; width:120px">Status</th>
+        <th onclick="srt('cod')">Código</th>
+        <th onclick="srt('desc')">Descrição</th>
+        <th onclick="srt('cls')">Classe</th>
+        <th onclick="srt('qtd')" style="text-align:right">Qtd Ideal</th>
+        <th onclick="srt('unit')" style="text-align:right">Vlr Unit.</th>
+        <th onclick="srt('tot')" style="text-align:right">Total</th>
+        <th style="text-align:center;width:130px">Status</th>
       </tr>
     </thead>
-    <tbody id="tableBody"></tbody>
+    <tbody id="tb"></tbody>
   </table>
-  <div id="emptyMsg" class="empty-msg" style="display:none">Nenhum item encontrado com os filtros aplicados.</div>
+  <div id="em" class="empty" style="display:none">Nenhum item encontrado.</div>
 </div>
-
 <script>
-// ═══════════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════════
-const RAW = {
-  hepr: [
-    ["B0601004AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AMARELO",15000,"A",0.8231],
-    ["B0601004AZCL","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL CLARO",10000,"A",0.8231],
-    ["B0601004AZES","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL ESCURO",5000,"C",0.8231],
-    ["B0601004BR","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² BRANCO",15000,"B",0.8231],
-    ["B0601004CZ","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² CINZA",10000,"B",0.8231],
-    ["B0601004PT","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² PRETO",15000,"A",0.8231],
-    ["B0601004VD","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE",10000,"B",0.8231],
-    ["B0601004VD/AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE E AMARELO",2000,"C",0.8231],
-    ["B0601004VM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERMELHO",10000,"B",0.8231],
-    ["B0101005AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AMARELO",10000,"A",1.3278],
-    ["B0101005AZCL","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL CLARO",20000,"A",1.3278],
-    ["B0101005AZES","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL ESCURO",5000,"C",1.3278],
-    ["B0101005BR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² BRANCO",20000,"B",1.3278],
-    ["B0101005CZ","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² CINZA",5000,"C",1.3278],
-    ["B0101005MR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² MARROM",2000,"C",1.3278],
-    ["B0101005PT","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² PRETO",20000,"A",1.3278],
-    ["B0101005VD","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE",10000,"A",1.3278],
-    ["B0101005VD/AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE E AMARELO",2000,"C",1.3278],
-    ["B0101005VM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERMELHO",10000,"A",1.3278],
-    ["B0101006AM","CABO FLEXÍVEL 450/750V 1 X 4 mm² AMARELO",2000,"C",2.1469],
-    ["B0101006AZCL","CABO FLEXÍVEL 450/750V 1 X 4 mm² AZUL CLARO",5000,"A",2.1469],
-    ["B0101006BR","CABO FLEXÍVEL 450/750V 1 X 4 mm² BRANCO",2000,"B",2.1469],
-    ["B0101006CZ","CABO FLEXÍVEL 450/750V 1 X 4 mm² CINZA",2000,"C",2.1469],
-    ["B0101006PT","CABO FLEXÍVEL 450/750V 1 X 4 mm² PRETO",10000,"A",2.1469],
-    ["B0101006VD","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERDE",5000,"B",2.1469],
-    ["B0101006VM","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERMELHO",5000,"A",2.1469],
-    ["B0101007AM","CABO FLEXÍVEL 450/750V 1 X 6 mm² AMARELO",2000,"C",3.1853],
-    ["B0101007AZCL","CABO FLEXÍVEL 450/750V 1 X 6 mm² AZUL CLARO",4000,"A",3.1853],
-    ["B0101007BR","CABO FLEXÍVEL 450/750V 1 X 6 mm² BRANCO",2000,"B",3.1853],
-    ["B0101007PT","CABO FLEXÍVEL 450/750V 1 X 6 mm² PRETO",5000,"A",3.1853],
-    ["B0101007VD","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERDE",5000,"A",3.1853],
-    ["B0101007VM","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERMELHO",5000,"A",3.1853],
-    ["B0701004AM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AMARELO",5000,"A",0.8206],
-    ["B0701004AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AZUL CLARO",5000,"B",0.8206],
-    ["B0701004BR","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² BRANCO",5000,"B",0.8206],
-    ["B0701004PT","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² PRETO",5000,"A",0.8206],
-    ["B0701004VD","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERDE",5000,"A",0.8206],
-    ["B0701004VM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERMELHO",5000,"A",0.8206],
-    ["B0701005AM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AMARELO",5000,"B",1.3718],
-    ["B0701005AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AZUL CLARO",5000,"A",1.3718],
-    ["B0701005BR","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² BRANCO",5000,"A",1.3718],
-    ["B0701005PT","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² PRETO",10000,"A",1.3718],
-    ["B0701005VD","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERDE",5000,"A",1.3718],
-    ["B0701005VM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERMELHO",5000,"B",1.3718],
-    ["B0701006AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² AZUL CLARO",5000,"A",2.169],
-    ["B0701006BR","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² BRANCO",2000,"B",2.169],
-    ["B0701006PT","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² PRETO",5000,"A",2.169],
-    ["B0701006VD","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERDE",5000,"A",2.169],
-    ["B0701006VM","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERMELHO",5000,"A",2.169],
-    ["B0701007AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² AZUL CLARO",4000,"B",3.1784],
-    ["B0701007PT","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² PRETO",8000,"A",3.1784],
-    ["B0701007VD","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERDE",4000,"B",3.1784],
-    ["B0701007VM","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERMELHO",4000,"C",3.1784],
-    ["B0101010AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² AZUL CLARO",4000,"B",5.4488],
-    ["B0101010PT","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² PRETO",8000,"A",5.4488],
-    ["B0101010VD","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² VERDE",4000,"B",5.4488],
-    ["B0101016AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² AZUL CLARO",4000,"B",8.4775],
-    ["B0101016PT","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² PRETO",8000,"A",8.4775],
-    ["B0101016VD","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² VERDE",4000,"A",8.4775],
-    ["B0101025AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² AZUL CLARO",3000,"B",13.3512],
-    ["B0101025PT","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² PRETO",6000,"A",13.3512],
-    ["B0101025VD","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² VERDE",3000,"B",13.3512],
-    ["B0101035AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² AZUL CLARO",2000,"B",19.0793],
-    ["B0101035PT","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² PRETO",4000,"A",18.988],
-    ["B0101035VD","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² VERDE",2000,"C",18.988],
-    ["E1801004AM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² AMARELO",2000,"B",0.9659],
-    ["E1801004AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² AZUL CLARO",2000,"C",0.9659],
-    ["E1801004BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² BRANCO",2000,"B",0.9659],
-    ["E1801004PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² PRETO",4000,"A",0.9659],
-    ["E1801004VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² VERDE",2000,"B",0.9659],
-    ["E1801004VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² VERMELHO",2000,"B",0.9659],
-    ["E1801005AM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² AMARELO",2000,"C",1.5204],
-    ["E1801005AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² AZUL CLARO",2000,"B",1.5204],
-    ["E1801005BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² BRANCO",2000,"C",1.5204],
-    ["E1801005CZ","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² CINZA",2000,"C",1.5204],
-    ["E1801005PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² PRETO",4000,"A",1.5204],
-    ["E1801005VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² VERDE",2000,"B",1.5204],
-    ["E1801005VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² VERMELHO",2000,"B",1.5204],
-    ["E1801006AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² AZUL CLARO",2000,"B",2.3331],
-    ["E1801006BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² BRANCO",2000,"C",2.3331],
-    ["E1801006PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² PRETO",4000,"A",2.3331],
-    ["E1801006VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² VERDE",2000,"B",2.3331],
-    ["E1801006VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² VERMELHO",2000,"C",2.3331],
-    ["E1801007AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² AZUL CLARO",2000,"B",3.3849],
-    ["E1801007BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² BRANCO",2000,"C",3.3849],
-    ["E1801007PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² PRETO",4000,"A",3.3849],
-    ["E1801007VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² VERDE",2000,"B",3.3849],
-    ["E1801007VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² VERMELHO",2000,"C",3.3849],
-    ["E1801010AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² AZUL CLARO",4000,"B",5.6615],
-    ["E1801010PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² PRETO",8000,"A",5.6615],
-    ["E1801010VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² VERDE",2000,"B",5.6615],
-    ["E1801016AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² AZUL CLARO",3500,"B",8.7188],
-    ["E1801016PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² PRETO",7000,"A",8.7188],
-    ["E1801016VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² VERDE",2000,"A",8.7188],
-    ["E1801025AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² AZUL CLARO",2500,"B",13.619],
-    ["E1801025PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² PRETO",5000,"A",13.619],
-    ["E1801025VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² VERDE",1000,"B",13.619],
-    ["E1801035AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² AZUL CLARO",2000,"B",19.3296],
-    ["E1801035PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² PRETO",4000,"A",19.3296],
-    ["E1801035VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² VERDE",1000,"B",19.3296],
-    ["E1801050AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² AZUL CLARO",1500,"B",27.6173],
-    ["E1801050PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² PRETO",3000,"A",27.6173],
-    ["E1801050VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² VERDE",1000,"B",27.6173],
-    ["E1801070AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² AZUL CLARO",1000,"B",40.0743],
-    ["E1801070PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² PRETO",2000,"A",40.0743],
-    ["E1801070VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² VERDE",500,"B",40.0743],
-    ["E1801095AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² AZUL CLARO",1000,"B",53.3976],
-    ["E1801095PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² PRETO",2000,"A",53.3976],
-    ["E1801095VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² VERDE",500,"B",53.3976],
-    ["E1801120AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² AZUL CLARO",800,"B",68.2863],
-    ["E1801120PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² PRETO",1600,"A",68.2863],
-    ["E1801120VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² VERDE",400,"B",68.2863],
-    ["E1801150AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² AZUL CLARO",500,"B",85.5393],
-    ["E1801150PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² PRETO",1000,"A",85.5393],
-    ["E1801150VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² VERDE",400,"C",85.5393],
-    ["E1801185AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 185 mm² AZUL CLARO",500,"B",103.4311],
-    ["E1801185PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 185 mm² PRETO",1000,"A",103.4311],
-    ["E1801240AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 240 mm² AZUL CLARO",200,"B",137.7322],
-    ["E1801240PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 240 mm² PRETO",400,"A",137.7322],
-    ["E1802004PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 1,5 mm² PRETO",2000,"C",2.1424],
-    ["E1802005PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 2,5 mm² PRETO",2000,"B",3.3261],
-    ["E1803004PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 1,5 mm² PRETO",3000,"A",2.9527],
-    ["E1803005PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 2,5 mm² PRETO",6000,"A",4.7106],
-    ["E1803006PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 4 mm² PRETO",2000,"A",7.2304],
-    ["E1803007PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 6 mm² PRETO",1000,"B",10.4053],
-    ["E1803010PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 10 mm² PRETO",500,"B",17.5236],
-    ["E1803016PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 16 mm² PRETO",500,"B",27.0405],
-    ["E1804004PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 1,5 mm² PRETO",3000,"C",3.8485],
-    ["E1804005PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 2,5 mm² PRETO",2000,"B",6.1181],
-    ["E1804006PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 4 mm² PRETO",1000,"A",9.444],
-    ["E1804007PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 6 mm² PRETO",1000,"A",13.6938],
-    ["E1804010PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 10 mm² PRETO",500,"A",23.0915],
-    ["E1804016PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 16 mm² PRETO",500,"A",35.6042],
-    ["B0202004PT","CABO FLEXÍVEL P.P 500V 2 x 1,5 mm² PRETO",4000,"A",1.6618],
-    ["B0202005PT","CABO FLEXÍVEL P.P 500V 2 x 2,5 mm² PRETO",6000,"A",2.7791],
-    ["B0203004PT","CABO FLEXÍVEL P.P 500V 3 x 1,5 mm² PRETO",4000,"A",2.4927],
-    ["B0203005PT","CABO FLEXÍVEL P.P 500V 3 x 2,5 mm² PRETO",6000,"A",4.1686],
-    ["B0203006PT","CABO FLEXÍVEL P.P 500V 3 x 4 mm² PRETO",1000,"C",6.584],
-    ["B0203007PT","CABO FLEXÍVEL P.P 500V 3 x 6 mm² PRETO",1000,"C",9.6425],
-    ["B0204004PT","CABO FLEXÍVEL P.P 500V 4 x 1,5 mm² PRETO",2000,"B",3.3236],
-    ["B0204005PT","CABO FLEXÍVEL P.P 500V 4 x 2,5 mm² PRETO",2000,"B",5.5582],
-    ["B0204006PT","CABO FLEXÍVEL P.P 500V 4 x 4 mm² PRETO",1000,"C",8.7787],
-    ["H0401025","CABO COBRE NÚ TMD 1 X 25 mm² 7FIOS NORMA",2000,"B",13.4637],
-    ["H0401035","CABO COBRE NÚ TMD 1 X 35 mm² 7FIOS NORMA",2000,"A",19.8294],
-    ["H0201050","CABO COBRE NÚ TM 1 X 50 mm² 19FIOS NORMA",2000,"A",27.5552],
-    ["H0401050","CABO COBRE NÚ TMD 1 X 50 mm² 7FIOS NORMA",2000,"C",28.5543],
-  ],
-  hepratox: [
-    ["B0601004AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AMARELO",15000,"A",0.8231],
-    ["B0601004AZCL","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL CLARO",10000,"A",0.8231],
-    ["B0601004AZES","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL ESCURO",5000,"C",0.8231],
-    ["B0601004BR","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² BRANCO",15000,"B",0.8231],
-    ["B0601004CZ","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² CINZA",10000,"B",0.8231],
-    ["B0601004PT","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² PRETO",15000,"A",0.8231],
-    ["B0601004VD","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE",10000,"B",0.8231],
-    ["B0601004VD/AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE E AMARELO",2000,"C",0.8231],
-    ["B0601004VM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERMELHO",10000,"B",0.8231],
-    ["B0101005AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AMARELO",10000,"A",1.3278],
-    ["B0101005AZCL","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL CLARO",20000,"A",1.3278],
-    ["B0101005AZES","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL ESCURO",5000,"C",1.3278],
-    ["B0101005BR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² BRANCO",20000,"B",1.3278],
-    ["B0101005CZ","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² CINZA",5000,"C",1.3278],
-    ["B0101005MR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² MARROM",2000,"C",1.3278],
-    ["B0101005PT","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² PRETO",20000,"A",1.3278],
-    ["B0101005VD","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE",10000,"A",1.3278],
-    ["B0101005VD/AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE E AMARELO",2000,"C",1.3278],
-    ["B0101005VM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERMELHO",10000,"A",1.3278],
-    ["B0101006AM","CABO FLEXÍVEL 450/750V 1 X 4 mm² AMARELO",2000,"C",2.1469],
-    ["B0101006AZCL","CABO FLEXÍVEL 450/750V 1 X 4 mm² AZUL CLARO",5000,"A",2.1469],
-    ["B0101006BR","CABO FLEXÍVEL 450/750V 1 X 4 mm² BRANCO",2000,"B",2.1469],
-    ["B0101006CZ","CABO FLEXÍVEL 450/750V 1 X 4 mm² CINZA",2000,"C",2.1469],
-    ["B0101006PT","CABO FLEXÍVEL 450/750V 1 X 4 mm² PRETO",10000,"A",2.1469],
-    ["B0101006VD","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERDE",5000,"B",2.1469],
-    ["B0101006VM","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERMELHO",5000,"A",2.1469],
-    ["B0101007AM","CABO FLEXÍVEL 450/750V 1 X 6 mm² AMARELO",2000,"C",3.1853],
-    ["B0101007AZCL","CABO FLEXÍVEL 450/750V 1 X 6 mm² AZUL CLARO",4000,"A",3.1853],
-    ["B0101007BR","CABO FLEXÍVEL 450/750V 1 X 6 mm² BRANCO",2000,"B",3.1853],
-    ["B0101007PT","CABO FLEXÍVEL 450/750V 1 X 6 mm² PRETO",5000,"A",3.1853],
-    ["B0101007VD","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERDE",5000,"A",3.1853],
-    ["B0101007VM","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERMELHO",5000,"A",3.1853],
-    ["B0701004AM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AMARELO",5000,"A",0.8206],
-    ["B0701004AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AZUL CLARO",5000,"B",0.8206],
-    ["B0701004BR","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² BRANCO",5000,"B",0.8206],
-    ["B0701004PT","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² PRETO",5000,"A",0.8206],
-    ["B0701004VD","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERDE",5000,"A",0.8206],
-    ["B0701004VM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERMELHO",5000,"A",0.8206],
-    ["B0701005AM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AMARELO",5000,"B",1.3718],
-    ["B0701005AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AZUL CLARO",5000,"A",1.3718],
-    ["B0701005BR","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² BRANCO",5000,"A",1.3718],
-    ["B0701005PT","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² PRETO",10000,"A",1.3718],
-    ["B0701005VD","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERDE",5000,"A",1.3718],
-    ["B0701005VM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERMELHO",5000,"B",1.3718],
-    ["B0701006AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² AZUL CLARO",5000,"A",2.169],
-    ["B0701006BR","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² BRANCO",2000,"B",2.169],
-    ["B0701006PT","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² PRETO",5000,"A",2.169],
-    ["B0701006VD","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERDE",5000,"A",2.169],
-    ["B0701006VM","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERMELHO",5000,"A",2.169],
-    ["B0701007AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² AZUL CLARO",4000,"B",3.1784],
-    ["B0701007PT","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² PRETO",8000,"A",3.1784],
-    ["B0701007VD","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERDE",4000,"B",3.1784],
-    ["B0701007VM","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERMELHO",4000,"C",3.1784],
-    ["B0101010AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² AZUL CLARO",4000,"B",5.4488],
-    ["B0101010PT","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² PRETO",8000,"A",5.4488],
-    ["B0101010VD","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² VERDE",4000,"B",5.4488],
-    ["B0101016AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² AZUL CLARO",4000,"B",8.4775],
-    ["B0101016PT","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² PRETO",8000,"A",8.4775],
-    ["B0101016VD","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² VERDE",4000,"A",8.4775],
-    ["B0101025AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² AZUL CLARO",3000,"B",13.3512],
-    ["B0101025PT","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² PRETO",6000,"A",13.3512],
-    ["B0101025VD","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² VERDE",3000,"B",13.3512],
-    ["B0101035AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² AZUL CLARO",2000,"B",19.0793],
-    ["B0101035PT","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² PRETO",4000,"A",18.988],
-    ["B0101035VD","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² VERDE",2000,"C",18.988],
-    ["E2401004AM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² AMARELO",2000,"B",0.8197],
-    ["E2401004AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² AZUL CLARO",2000,"C",0.8197],
-    ["E2401004BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² BRANCO",2000,"B",0.8197],
-    ["E2401004PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² PRETO",4000,"A",0.8197],
-    ["E2401004VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² VERDE",2000,"B",0.8197],
-    ["E2401004VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² VERMELHO",2000,"B",0.8197],
-    ["E2401005AM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² AMARELO",2000,"C",1.3578],
-    ["E2401005AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² AZUL CLARO",2000,"B",1.3578],
-    ["E2401005BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² BRANCO",2000,"C",1.3578],
-    ["E2401005CZ","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² CINZA",2000,"C",1.3578],
-    ["E2401005PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² PRETO",4000,"A",1.3578],
-    ["E2401005VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² VERDE",2000,"B",1.3578],
-    ["E2401005VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² VERMELHO",2000,"B",1.3578],
-    ["E2401006AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² AZUL CLARO",2000,"B",2.1515],
-    ["E2401006BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² BRANCO",2000,"C",2.1515],
-    ["E2401006PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² PRETO",4000,"A",2.1515],
-    ["E2401006VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² VERDE",2000,"B",2.1515],
-    ["E2401006VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² VERMELHO",2000,"C",2.1515],
-    ["E2401007AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² AZUL CLARO",2000,"B",3.1574],
-    ["E2401007BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² BRANCO",2000,"C",3.1574],
-    ["E2401007PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² PRETO",4000,"A",3.1574],
-    ["E2401007VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² VERDE",2000,"B",3.1574],
-    ["E2401007VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² VERMELHO",2000,"C",3.1574],
-    ["E2401010AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² AZUL CLARO",4000,"B",5.3881],
-    ["E2401010PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² PRETO",8000,"A",5.3881],
-    ["E2401010VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² VERDE",2000,"B",5.3881],
-    ["E2401016AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² AZUL CLARO",3500,"B",8.4052],
-    ["E2401016PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² PRETO",7000,"A",8.4052],
-    ["E2401016VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² VERDE",2000,"A",8.4052],
-    ["E2401025AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² AZUL CLARO",2500,"B",13.1813],
-    ["E2401025PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² PRETO",5000,"A",13.1813],
-    ["E2401025VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² VERDE",1000,"B",13.1813],
-    ["E2401035AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² AZUL CLARO",2000,"B",18.8251],
-    ["E2401035PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² PRETO",4000,"A",18.8251],
-    ["E2401035VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² VERDE",1000,"B",18.8251],
-    ["E2401050AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² AZUL CLARO",1500,"B",27.0056],
-    ["E2401050PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² PRETO",3000,"A",27.0056],
-    ["E2401050VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² VERDE",1000,"B",27.0056],
-    ["E2401070AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² AZUL CLARO",1000,"B",39.3548],
-    ["E2401070PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² PRETO",2000,"A",39.3548],
-    ["E2401070VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² VERDE",500,"B",39.3548],
-    ["E2401095AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² AZUL CLARO",1000,"B",52.5019],
-    ["E2401095PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² PRETO",2000,"A",52.5019],
-    ["E2401095VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² VERDE",500,"B",52.5019],
-    ["E2401120AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² AZUL CLARO",800,"B",67.274],
-    ["E2401120PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² PRETO",1600,"A",67.274],
-    ["E2401120VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² VERDE",400,"B",67.274],
-    ["E2401150AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² AZUL CLARO",500,"B",84.315],
-    ["E2401150PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² PRETO",1000,"A",84.315],
-    ["E2401150VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² VERDE",400,"C",84.315],
-    ["E2401185AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 185 mm² AZUL CLARO",500,"B",102.0974],
-    ["E2401185PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 185 mm² PRETO",1000,"A",102.0974],
-    ["E2401240AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 240 mm² AZUL CLARO",200,"B",136.0955],
-    ["E2401240PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 240 mm² PRETO",400,"A",136.0955],
-    ["E1802004PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 1,5 mm² PRETO",2000,"C",2.1424],
-    ["E1802005PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 2,5 mm² PRETO",2000,"B",3.3261],
-    ["E1803004PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 1,5 mm² PRETO",3000,"A",2.9527],
-    ["E1803005PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 2,5 mm² PRETO",6000,"A",4.7106],
-    ["E1803006PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 4 mm² PRETO",2000,"A",7.2304],
-    ["E1803007PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 6 mm² PRETO",1000,"B",10.4053],
-    ["E1803010PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 10 mm² PRETO",500,"B",17.5236],
-    ["E1803016PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 16 mm² PRETO",500,"B",27.0405],
-    ["E1804004PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 1,5 mm² PRETO",3000,"C",3.8485],
-    ["E1804005PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 2,5 mm² PRETO",2000,"B",6.1181],
-    ["E1804006PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 4 mm² PRETO",1000,"A",9.444],
-    ["E1804007PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 6 mm² PRETO",1000,"A",13.6938],
-    ["E1804010PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 10 mm² PRETO",500,"A",23.0915],
-    ["E1804016PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 16 mm² PRETO",500,"A",35.6042],
-    ["B0202004PT","CABO FLEXÍVEL P.P 500V 2 x 1,5 mm² PRETO",4000,"A",1.6618],
-    ["B0202005PT","CABO FLEXÍVEL P.P 500V 2 x 2,5 mm² PRETO",6000,"A",2.7791],
-    ["B0203004PT","CABO FLEXÍVEL P.P 500V 3 x 1,5 mm² PRETO",4000,"A",2.4927],
-    ["B0203005PT","CABO FLEXÍVEL P.P 500V 3 x 2,5 mm² PRETO",6000,"A",4.1686],
-    ["B0203006PT","CABO FLEXÍVEL P.P 500V 3 x 4 mm² PRETO",1000,"C",6.584],
-    ["B0203007PT","CABO FLEXÍVEL P.P 500V 3 x 6 mm² PRETO",1000,"C",9.6425],
-    ["B0204004PT","CABO FLEXÍVEL P.P 500V 4 x 1,5 mm² PRETO",2000,"B",3.3236],
-    ["B0204005PT","CABO FLEXÍVEL P.P 500V 4 x 2,5 mm² PRETO",2000,"B",5.5582],
-    ["B0204006PT","CABO FLEXÍVEL P.P 500V 4 x 4 mm² PRETO",1000,"C",8.7787],
-    ["H0401025","CABO COBRE NÚ TMD 1 X 25 mm² 7FIOS NORMA",2000,"B",13.4637],
-    ["H0401035","CABO COBRE NÚ TMD 1 X 35 mm² 7FIOS NORMA",2000,"A",19.8294],
-    ["H0201050","CABO COBRE NÚ TM 1 X 50 mm² 19FIOS NORMA",2000,"A",27.5552],
-    ["H0401050","CABO COBRE NÚ TMD 1 X 50 mm² 7FIOS NORMA",2000,"C",28.5543],
-  ]
-};
-
-// ═══════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════
-let activeTab = 'hepr';
-let showDisc  = false;
-let sortCol   = null;
-let sortDir   = 1;
-
-// per-tab state: discontinued & modified quantities
-const state = {
-  hepr:     { disc: new Set(), qtds: {} },
-  hepratox: { disc: new Set(), qtds: {} }
-};
-
-const classes = { A: true, B: true, C: true };
-
-// ═══════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════
-const brl = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const num = v => v.toLocaleString('pt-BR');
-
-function switchTab(tab) {
-  activeTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.tab-btn.${tab}`).classList.add('active');
-  document.getElementById('accent-bar').className = `accent-line ${tab}`;
-  const exp = document.getElementById('exportBtn');
-  exp.className = tab === 'hepr' ? 'btn-export' : 'btn-export hepratox';
-  applyFilters();
+const D={
+h:[
+["B0601004AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AMARELO",15000,"A",0.8231],
+["B0601004AZCL","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL CLARO",10000,"A",0.8231],
+["B0601004AZES","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL ESCURO",5000,"C",0.8231],
+["B0601004BR","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² BRANCO",15000,"B",0.8231],
+["B0601004CZ","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² CINZA",10000,"B",0.8231],
+["B0601004PT","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² PRETO",15000,"A",0.8231],
+["B0601004VD","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE",10000,"B",0.8231],
+["B0601004VD/AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE E AMARELO",2000,"C",0.8231],
+["B0601004VM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERMELHO",10000,"B",0.8231],
+["B0101005AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AMARELO",10000,"A",1.3278],
+["B0101005AZCL","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL CLARO",20000,"A",1.3278],
+["B0101005AZES","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL ESCURO",5000,"C",1.3278],
+["B0101005BR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² BRANCO",20000,"B",1.3278],
+["B0101005CZ","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² CINZA",5000,"C",1.3278],
+["B0101005MR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² MARROM",2000,"C",1.3278],
+["B0101005PT","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² PRETO",20000,"A",1.3278],
+["B0101005VD","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE",10000,"A",1.3278],
+["B0101005VD/AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE E AMARELO",2000,"C",1.3278],
+["B0101005VM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERMELHO",10000,"A",1.3278],
+["B0101006AM","CABO FLEXÍVEL 450/750V 1 X 4 mm² AMARELO",2000,"C",2.1469],
+["B0101006AZCL","CABO FLEXÍVEL 450/750V 1 X 4 mm² AZUL CLARO",5000,"A",2.1469],
+["B0101006BR","CABO FLEXÍVEL 450/750V 1 X 4 mm² BRANCO",2000,"B",2.1469],
+["B0101006CZ","CABO FLEXÍVEL 450/750V 1 X 4 mm² CINZA",2000,"C",2.1469],
+["B0101006PT","CABO FLEXÍVEL 450/750V 1 X 4 mm² PRETO",10000,"A",2.1469],
+["B0101006VD","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERDE",5000,"B",2.1469],
+["B0101006VM","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERMELHO",5000,"A",2.1469],
+["B0101007AM","CABO FLEXÍVEL 450/750V 1 X 6 mm² AMARELO",2000,"C",3.1853],
+["B0101007AZCL","CABO FLEXÍVEL 450/750V 1 X 6 mm² AZUL CLARO",4000,"A",3.1853],
+["B0101007BR","CABO FLEXÍVEL 450/750V 1 X 6 mm² BRANCO",2000,"B",3.1853],
+["B0101007PT","CABO FLEXÍVEL 450/750V 1 X 6 mm² PRETO",5000,"A",3.1853],
+["B0101007VD","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERDE",5000,"A",3.1853],
+["B0101007VM","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERMELHO",5000,"A",3.1853],
+["B0701004AM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AMARELO",5000,"A",0.8206],
+["B0701004AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AZUL CLARO",5000,"B",0.8206],
+["B0701004BR","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² BRANCO",5000,"B",0.8206],
+["B0701004PT","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² PRETO",5000,"A",0.8206],
+["B0701004VD","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERDE",5000,"A",0.8206],
+["B0701004VM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERMELHO",5000,"A",0.8206],
+["B0701005AM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AMARELO",5000,"B",1.3718],
+["B0701005AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AZUL CLARO",5000,"A",1.3718],
+["B0701005BR","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² BRANCO",5000,"A",1.3718],
+["B0701005PT","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² PRETO",10000,"A",1.3718],
+["B0701005VD","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERDE",5000,"A",1.3718],
+["B0701005VM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERMELHO",5000,"B",1.3718],
+["B0701006AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² AZUL CLARO",5000,"A",2.169],
+["B0701006BR","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² BRANCO",2000,"B",2.169],
+["B0701006PT","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² PRETO",5000,"A",2.169],
+["B0701006VD","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERDE",5000,"A",2.169],
+["B0701006VM","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERMELHO",5000,"A",2.169],
+["B0701007AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² AZUL CLARO",4000,"B",3.1784],
+["B0701007PT","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² PRETO",8000,"A",3.1784],
+["B0701007VD","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERDE",4000,"B",3.1784],
+["B0701007VM","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERMELHO",4000,"C",3.1784],
+["B0101010AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² AZUL CLARO",3000,"B",5.4488],
+["B0101010PT","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² PRETO",8000,"A",5.4488],
+["B0101010VD","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² VERDE",2000,"B",5.4488],
+["B0101016AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² AZUL CLARO",2000,"B",8.4775],
+["B0101016PT","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² PRETO",8000,"A",8.4775],
+["B0101016VD","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² VERDE",2000,"A",8.4775],
+["B0101025AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² AZUL CLARO",2000,"B",13.3512],
+["B0101025PT","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² PRETO",6000,"A",13.3512],
+["B0101025VD","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² VERDE",1000,"B",13.3512],
+["B0101035AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² AZUL CLARO",2000,"B",19.0793],
+["B0101035PT","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² PRETO",4000,"A",18.988],
+["B0101035VD","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² VERDE",1000,"C",18.988],
+["E1801004AM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² AMARELO",2000,"B",0.9659],
+["E1801004AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² AZUL CLARO",2000,"C",0.9659],
+["E1801004BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² BRANCO",2000,"B",0.9659],
+["E1801004PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² PRETO",4000,"A",0.9659],
+["E1801004VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² VERDE",2000,"B",0.9659],
+["E1801004VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² VERMELHO",2000,"B",0.9659],
+["E1801005AM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² AMARELO",2000,"C",1.5204],
+["E1801005AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² AZUL CLARO",2000,"B",1.5204],
+["E1801005BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² BRANCO",2000,"C",1.5204],
+["E1801005CZ","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² CINZA",1000,"C",1.5204],
+["E1801005PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² PRETO",4000,"A",1.5204],
+["E1801005VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² VERDE",2000,"B",1.5204],
+["E1801005VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² VERMELHO",2000,"B",1.5204],
+["E1801006AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² AZUL CLARO",2000,"B",2.3331],
+["E1801006BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² BRANCO",1000,"C",2.3331],
+["E1801006PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² PRETO",4000,"A",2.3331],
+["E1801006VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² VERDE",2000,"B",2.3331],
+["E1801006VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² VERMELHO",2000,"C",2.3331],
+["E1801007AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² AZUL CLARO",2000,"B",3.3849],
+["E1801007BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² BRANCO",1000,"C",3.3849],
+["E1801007PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² PRETO",4000,"A",3.3849],
+["E1801007VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² VERDE",2000,"B",3.3849],
+["E1801007VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² VERMELHO",1000,"C",3.3849],
+["E1801010AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² AZUL CLARO",4000,"B",5.6615],
+["E1801010PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² PRETO",8000,"A",5.6615],
+["E1801010VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² VERDE",2000,"B",5.6615],
+["E1801016AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² AZUL CLARO",2000,"B",8.7188],
+["E1801016PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² PRETO",7000,"A",8.7188],
+["E1801016VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² VERDE",2000,"A",8.7188],
+["E1801025AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² AZUL CLARO",2000,"B",13.619],
+["E1801025PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² PRETO",5000,"A",13.619],
+["E1801025VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² VERDE",1000,"B",13.619],
+["E1801035AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² AZUL CLARO",2000,"B",19.3296],
+["E1801035PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² PRETO",4000,"A",19.3296],
+["E1801035VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² VERDE",1000,"B",19.3296],
+["E1801050AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² AZUL CLARO",1000,"B",27.6173],
+["E1801050PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² PRETO",3000,"A",27.6173],
+["E1801050VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² VERDE",500,"B",27.6173],
+["E1801070AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² AZUL CLARO",1000,"B",40.0743],
+["E1801070PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² PRETO",2000,"A",40.0743],
+["E1801070VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² VERDE",500,"B",40.0743],
+["E1801095AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² AZUL CLARO",1000,"B",53.3976],
+["E1801095PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² PRETO",2000,"A",53.3976],
+["E1801095VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² VERDE",500,"B",53.3976],
+["E1801120AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² AZUL CLARO",800,"B",68.2863],
+["E1801120PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² PRETO",1600,"A",68.2863],
+["E1801120VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² VERDE",400,"B",68.2863],
+["E1801150AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² AZUL CLARO",500,"B",85.5393],
+["E1801150PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² PRETO",1000,"A",85.5393],
+["E1801150VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² VERDE",200,"C",85.5393],
+["E1801185AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 185 mm² AZUL CLARO",500,"B",103.4311],
+["E1801185PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 185 mm² PRETO",1000,"A",103.4311],
+["E1801240AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 240 mm² AZUL CLARO",200,"B",137.7322],
+["E1801240PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 240 mm² PRETO",400,"A",137.7322],
+["E1802004PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 1,5 mm² PRETO",2000,"C",2.1424],
+["E1802005PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 2,5 mm² PRETO",2000,"B",3.3261],
+["E1803004PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 1,5 mm² PRETO",3000,"A",2.9527],
+["E1803005PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 2,5 mm² PRETO",6000,"A",4.7106],
+["E1803006PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 4 mm² PRETO",2000,"A",7.2304],
+["E1803007PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 6 mm² PRETO",1000,"B",10.4053],
+["E1803010PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 10 mm² PRETO",500,"B",17.5236],
+["E1803016PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 16 mm² PRETO",500,"B",27.0405],
+["E1804004PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 1,5 mm² PRETO",2000,"C",3.8485],
+["E1804005PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 2,5 mm² PRETO",2000,"B",6.1181],
+["E1804006PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 4 mm² PRETO",1000,"A",9.444],
+["E1804007PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 6 mm² PRETO",1000,"A",13.6938],
+["E1804010PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 10 mm² PRETO",500,"A",23.0915],
+["E1804016PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 16 mm² PRETO",500,"A",35.6042],
+["B0202004PT","CABO FLEXÍVEL P.P 500V 2 x 1,5 mm² PRETO",4000,"A",1.6618],
+["B0202005PT","CABO FLEXÍVEL P.P 500V 2 x 2,5 mm² PRETO",6000,"A",2.7791],
+["B0203004PT","CABO FLEXÍVEL P.P 500V 3 x 1,5 mm² PRETO",4000,"A",2.4927],
+["B0203005PT","CABO FLEXÍVEL P.P 500V 3 x 2,5 mm² PRETO",6000,"A",4.1686],
+["B0203006PT","CABO FLEXÍVEL P.P 500V 3 x 4 mm² PRETO",1000,"C",6.584],
+["B0203007PT","CABO FLEXÍVEL P.P 500V 3 x 6 mm² PRETO",1000,"C",9.6425],
+["B0204004PT","CABO FLEXÍVEL P.P 500V 4 x 1,5 mm² PRETO",2000,"B",3.3236],
+["B0204005PT","CABO FLEXÍVEL P.P 500V 4 x 2,5 mm² PRETO",2000,"B",5.5582],
+["B0204006PT","CABO FLEXÍVEL P.P 500V 4 x 4 mm² PRETO",1000,"C",8.7787],
+["H0401025","CABO COBRE NÚ TMD 1 X 25 mm² 7FIOS NORMA",2000,"B",13.4637],
+["H0401035","CABO COBRE NÚ TMD 1 X 35 mm² 7FIOS NORMA",2000,"A",19.8294],
+["H0201050","CABO COBRE NÚ TM 1 X 50 mm² 19FIOS NORMA",2000,"A",27.5552],
+["H0401050","CABO COBRE NÚ TMD 1 X 50 mm² 7FIOS NORMA",1000,"C",28.5543]
+],
+a:[
+["B0601004AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AMARELO",15000,"A",0.8231],
+["B0601004AZCL","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL CLARO",10000,"A",0.8231],
+["B0601004AZES","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL ESCURO",5000,"C",0.8231],
+["B0601004BR","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² BRANCO",15000,"B",0.8231],
+["B0601004CZ","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² CINZA",10000,"B",0.8231],
+["B0601004PT","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² PRETO",15000,"A",0.8231],
+["B0601004VD","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE",10000,"B",0.8231],
+["B0601004VD/AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE E AMARELO",2000,"C",0.8231],
+["B0601004VM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERMELHO",10000,"B",0.8231],
+["B0101005AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AMARELO",10000,"A",1.3278],
+["B0101005AZCL","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL CLARO",20000,"A",1.3278],
+["B0101005AZES","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL ESCURO",5000,"C",1.3278],
+["B0101005BR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² BRANCO",20000,"B",1.3278],
+["B0101005CZ","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² CINZA",5000,"C",1.3278],
+["B0101005MR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² MARROM",2000,"C",1.3278],
+["B0101005PT","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² PRETO",20000,"A",1.3278],
+["B0101005VD","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE",10000,"A",1.3278],
+["B0101005VD/AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE E AMARELO",2000,"C",1.3278],
+["B0101005VM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERMELHO",10000,"A",1.3278],
+["B0101006AM","CABO FLEXÍVEL 450/750V 1 X 4 mm² AMARELO",2000,"C",2.1469],
+["B0101006AZCL","CABO FLEXÍVEL 450/750V 1 X 4 mm² AZUL CLARO",5000,"A",2.1469],
+["B0101006BR","CABO FLEXÍVEL 450/750V 1 X 4 mm² BRANCO",2000,"B",2.1469],
+["B0101006CZ","CABO FLEXÍVEL 450/750V 1 X 4 mm² CINZA",2000,"C",2.1469],
+["B0101006PT","CABO FLEXÍVEL 450/750V 1 X 4 mm² PRETO",10000,"A",2.1469],
+["B0101006VD","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERDE",5000,"B",2.1469],
+["B0101006VM","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERMELHO",5000,"A",2.1469],
+["B0101007AM","CABO FLEXÍVEL 450/750V 1 X 6 mm² AMARELO",2000,"C",3.1853],
+["B0101007AZCL","CABO FLEXÍVEL 450/750V 1 X 6 mm² AZUL CLARO",4000,"A",3.1853],
+["B0101007BR","CABO FLEXÍVEL 450/750V 1 X 6 mm² BRANCO",2000,"B",3.1853],
+["B0101007PT","CABO FLEXÍVEL 450/750V 1 X 6 mm² PRETO",5000,"A",3.1853],
+["B0101007VD","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERDE",5000,"A",3.1853],
+["B0101007VM","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERMELHO",5000,"A",3.1853],
+["B0701004AM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AMARELO",5000,"A",0.8206],
+["B0701004AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AZUL CLARO",5000,"B",0.8206],
+["B0701004BR","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² BRANCO",5000,"B",0.8206],
+["B0701004PT","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² PRETO",5000,"A",0.8206],
+["B0701004VD","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERDE",5000,"A",0.8206],
+["B0701004VM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERMELHO",5000,"A",0.8206],
+["B0701005AM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AMARELO",5000,"B",1.3718],
+["B0701005AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AZUL CLARO",5000,"A",1.3718],
+["B0701005BR","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² BRANCO",5000,"A",1.3718],
+["B0701005PT","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² PRETO",10000,"A",1.3718],
+["B0701005VD","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERDE",5000,"A",1.3718],
+["B0701005VM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERMELHO",5000,"B",1.3718],
+["B0701006AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² AZUL CLARO",5000,"A",2.169],
+["B0701006BR","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² BRANCO",2000,"B",2.169],
+["B0701006PT","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² PRETO",5000,"A",2.169],
+["B0701006VD","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERDE",5000,"A",2.169],
+["B0701006VM","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERMELHO",5000,"A",2.169],
+["B0701007AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² AZUL CLARO",4000,"B",3.1784],
+["B0701007PT","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² PRETO",8000,"A",3.1784],
+["B0701007VD","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERDE",4000,"B",3.1784],
+["B0701007VM","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERMELHO",4000,"C",3.1784],
+["B0101010AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² AZUL CLARO",3000,"B",5.4488],
+["B0101010PT","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² PRETO",8000,"A",5.4488],
+["B0101010VD","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² VERDE",2000,"B",5.4488],
+["B0101016AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² AZUL CLARO",2000,"B",8.4775],
+["B0101016PT","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² PRETO",8000,"A",8.4775],
+["B0101016VD","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² VERDE",2000,"A",8.4775],
+["B0101025AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² AZUL CLARO",2000,"B",13.3512],
+["B0101025PT","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² PRETO",6000,"A",13.3512],
+["B0101025VD","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² VERDE",1000,"B",13.3512],
+["B0101035AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² AZUL CLARO",2000,"B",19.0793],
+["B0101035PT","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² PRETO",4000,"A",18.988],
+["B0101035VD","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² VERDE",1000,"C",18.988],
+["E2401004AM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² AMARELO",2000,"B",0.8197],
+["E2401004AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² AZUL CLARO",2000,"C",0.8197],
+["E2401004BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² BRANCO",2000,"B",0.8197],
+["E2401004PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² PRETO",4000,"A",0.8197],
+["E2401004VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² VERDE",2000,"B",0.8197],
+["E2401004VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² VERMELHO",2000,"B",0.8197],
+["E2401005AM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² AMARELO",2000,"C",1.3578],
+["E2401005AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² AZUL CLARO",2000,"B",1.3578],
+["E2401005BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² BRANCO",2000,"C",1.3578],
+["E2401005CZ","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² CINZA",1000,"C",1.3578],
+["E2401005PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² PRETO",4000,"A",1.3578],
+["E2401005VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² VERDE",2000,"B",1.3578],
+["E2401005VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² VERMELHO",2000,"B",1.3578],
+["E2401006AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² AZUL CLARO",2000,"B",2.1515],
+["E2401006BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² BRANCO",1000,"C",2.1515],
+["E2401006PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² PRETO",4000,"A",2.1515],
+["E2401006VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² VERDE",2000,"B",2.1515],
+["E2401006VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² VERMELHO",2000,"C",2.1515],
+["E2401007AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² AZUL CLARO",2000,"B",3.1574],
+["E2401007BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² BRANCO",1000,"C",3.1574],
+["E2401007PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² PRETO",4000,"A",3.1574],
+["E2401007VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² VERDE",2000,"B",3.1574],
+["E2401007VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² VERMELHO",1000,"C",3.1574],
+["E2401010AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² AZUL CLARO",4000,"B",5.3881],
+["E2401010PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² PRETO",8000,"A",5.3881],
+["E2401010VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² VERDE",2000,"B",5.3881],
+["E2401016AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² AZUL CLARO",2000,"B",8.4052],
+["E2401016PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² PRETO",7000,"A",8.4052],
+["E2401016VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² VERDE",2000,"A",8.4052],
+["E2401025AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² AZUL CLARO",2000,"B",13.1813],
+["E2401025PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² PRETO",5000,"A",13.1813],
+["E2401025VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² VERDE",1000,"B",13.1813],
+["E2401035AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² AZUL CLARO",2000,"B",18.8251],
+["E2401035PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² PRETO",4000,"A",18.8251],
+["E2401035VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² VERDE",1000,"B",18.8251],
+["E2401050AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² AZUL CLARO",1000,"B",27.0056],
+["E2401050PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² PRETO",3000,"A",27.0056],
+["E2401050VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² VERDE",500,"B",27.0056],
+["E2401070AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² AZUL CLARO",1000,"B",39.3548],
+["E2401070PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² PRETO",2000,"A",39.3548],
+["E2401070VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² VERDE",500,"B",39.3548],
+["E2401095AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² AZUL CLARO",1000,"B",52.5019],
+["E2401095PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² PRETO",2000,"A",52.5019],
+["E2401095VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² VERDE",500,"B",52.5019],
+["E2401120AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² AZUL CLARO",800,"B",67.274],
+["E2401120PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² PRETO",1600,"A",67.274],
+["E2401120VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² VERDE",400,"B",67.274],
+["E2401150AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² AZUL CLARO",500,"B",84.315],
+["E2401150PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² PRETO",1000,"A",84.315],
+["E2401150VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² VERDE",200,"C",84.315],
+["E2401185AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 185 mm² AZUL CLARO",500,"B",102.0974],
+["E2401185PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 185 mm² PRETO",1000,"A",102.0974],
+["E2401240AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 240 mm² AZUL CLARO",200,"B",136.0955],
+["E2401240PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 240 mm² PRETO",400,"A",136.0955],
+["E1802004PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 1,5 mm² PRETO",2000,"C",2.1424],
+["E1802005PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 2,5 mm² PRETO",2000,"B",3.3261],
+["E1803004PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 1,5 mm² PRETO",3000,"A",2.9527],
+["E1803005PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 2,5 mm² PRETO",6000,"A",4.7106],
+["E1803006PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 4 mm² PRETO",2000,"A",7.2304],
+["E1803007PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 6 mm² PRETO",1000,"B",10.4053],
+["E1803010PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 10 mm² PRETO",500,"B",17.5236],
+["E1803016PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 16 mm² PRETO",500,"B",27.0405],
+["E1804004PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 1,5 mm² PRETO",2000,"C",3.8485],
+["E1804005PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 2,5 mm² PRETO",2000,"B",6.1181],
+["E1804006PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 4 mm² PRETO",1000,"A",9.444],
+["E1804007PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 6 mm² PRETO",1000,"A",13.6938],
+["E1804010PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 10 mm² PRETO",500,"A",23.0915],
+["E1804016PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 16 mm² PRETO",500,"A",35.6042],
+["B0202004PT","CABO FLEXÍVEL P.P 500V 2 x 1,5 mm² PRETO",4000,"A",1.6618],
+["B0202005PT","CABO FLEXÍVEL P.P 500V 2 x 2,5 mm² PRETO",6000,"A",2.7791],
+["B0203004PT","CABO FLEXÍVEL P.P 500V 3 x 1,5 mm² PRETO",4000,"A",2.4927],
+["B0203005PT","CABO FLEXÍVEL P.P 500V 3 x 2,5 mm² PRETO",6000,"A",4.1686],
+["B0203006PT","CABO FLEXÍVEL P.P 500V 3 x 4 mm² PRETO",1000,"C",6.584],
+["B0203007PT","CABO FLEXÍVEL P.P 500V 3 x 6 mm² PRETO",1000,"C",9.6425],
+["B0204004PT","CABO FLEXÍVEL P.P 500V 4 x 1,5 mm² PRETO",2000,"B",3.3236],
+["B0204005PT","CABO FLEXÍVEL P.P 500V 4 x 2,5 mm² PRETO",2000,"B",5.5582],
+["B0204006PT","CABO FLEXÍVEL P.P 500V 4 x 4 mm² PRETO",1000,"C",8.7787],
+["H0401025","CABO COBRE NÚ TMD 1 X 25 mm² 7FIOS NORMA",2000,"B",13.4637],
+["H0401035","CABO COBRE NÚ TMD 1 X 35 mm² 7FIOS NORMA",2000,"A",19.8294],
+["H0201050","CABO COBRE NÚ TM 1 X 50 mm² 19FIOS NORMA",2000,"A",27.5552],
+["H0401050","CABO COBRE NÚ TMD 1 X 50 mm² 7FIOS NORMA",1000,"C",28.5543]
+]};
+let tab='h',showD=false,sCol=null,sDir=1;
+const ST={h:{disc:new Set(),qtds:{}},a:{disc:new Set(),qtds:{}}};
+const CL={A:true,B:true,C:true};
+const brl=v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=v=>v.toLocaleString('pt-BR');
+function sw(t){tab=t;document.getElementById('th').className='tab'+(t==='h'?' act-h':'');document.getElementById('ta').className='tab'+(t==='a'?' act-a':'');document.getElementById('ab').className='abar abar-'+(t==='h'?'h':'a');document.getElementById('eb').className='expbtn'+(t==='a'?' ea':'');render();}
+function tgc(c){CL[c]=!CL[c];document.getElementById('l'+c).className=CL[c]?'l'+c.toLowerCase():'';render();}
+function tgd(){showD=!showD;const b=document.getElementById('sdb');b.className='sdb'+(showD?' on':'');b.textContent=showD?'🙈 Ocultar descontinuados':'👁 Mostrar descontinuados';render();}
+function tgi(cod){const s=ST[tab];s.disc.has(cod)?s.disc.delete(cod):s.disc.add(cod);render();}
+function onq(cod,val){const v=parseInt(val.replace(/\./g,'').replace(',',''));if(!isNaN(v)&&v>=0)ST[tab].qtds[cod]=v;render();}
+function srt(col){sCol===col?sDir*=-1:(sCol=col,sDir=1);document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sas','sds'));const map=['cod','desc','cls','qtd','unit','tot'];const ths=document.querySelectorAll('thead th');const i=map.indexOf(col);if(i>=0)ths[i].classList.add(sDir===1?'sas':'sds');render();}
+function render(){
+  const s=ST[tab],q=document.getElementById('si').value.toLowerCase().trim();
+  const tc=tab==='h'?'th-h':'th-a';
+  let rows=D[tab].map(r=>{const[cod,desc,q0,cls,unit]=r;const qtd=s.qtds[cod]!==undefined?s.qtds[cod]:q0;return{cod,desc,qtd,q0,cls,unit,tot:qtd*unit,disc:s.disc.has(cod)};});
+  rows=rows.filter(r=>{if(!showD&&r.disc)return false;if(!CL[r.cls])return false;if(q&&!r.cod.toLowerCase().includes(q)&&!r.desc.toLowerCase().includes(q))return false;return true;});
+  if(sCol){rows.sort((a,b)=>{const av=a[sCol],bv=b[sCol];return(typeof av==='string'?av.localeCompare(bv):av-bv)*sDir;});}
+  const act=rows.filter(r=>!r.disc);
+  const tA=act.reduce((s,r)=>s+r.tot,0),mA=act.reduce((s,r)=>s+r.qtd,0),nD=rows.filter(r=>r.disc).length,tG=rows.reduce((s,r)=>s+r.tot,0);
+  document.getElementById('sumbar').innerHTML=`<div class="sc ${tab==='h'?'sh':'sa'}"><div class="v">${brl(tA)}</div><div class="l">Total ativo</div></div><div class="sc"><div class="v">${num(mA)} m</div><div class="l">Metros ativos</div></div><div class="sc sg"><div class="v">${act.length}</div><div class="l">Itens ativos</div></div><div class="sc sd"><div class="v">${nD}</div><div class="l">Descontinuados</div></div><div class="sc"><div class="v">${brl(tG)}</div><div class="l">Total geral (vis.)</div></div>`;
+  const tb=document.getElementById('tb');
+  if(!rows.length){tb.innerHTML='';document.getElementById('em').style.display='block';return;}
+  document.getElementById('em').style.display='none';
+  tb.innerHTML=rows.map(r=>{const mod=ST[tab].qtds[r.cod]!==undefined&&ST[tab].qtds[r.cod]!==r.q0;return`<tr class="${r.disc?'disc':''}"><td class="cod">${r.cod}</td><td class="dsc">${r.desc}</td><td><span class="badge b${r.cls}">${r.cls}</span></td><td class="nr"><div class="qwrap"><input class="qi${mod?' mod':''}" type="text" value="${num(r.qtd)}" onblur="onq('${r.cod}',this.value)" onkeydown="if(event.key==='Enter')this.blur()" onfocus="this.select()"></div></td><td class="nr">${brl(r.unit)}</td><td class="th ${tc}">${brl(r.tot)}</td><td style="text-align:center"><button class="db${r.disc?' on':''}" onclick="tgi('${r.cod}')">${r.disc?'↩ Reativar':'✕ Descontinuar'}</button></td></tr>`;}).join('');
 }
-
-function toggleClass(cls) {
-  classes[cls] = !classes[cls];
-  const lbl = document.getElementById(`lbl-${cls.toLowerCase()}`);
-  const chk = document.getElementById(`chk-${cls.toLowerCase()}`);
-  chk.checked = classes[cls];
-  lbl.className = classes[cls] ? `active-${cls.toLowerCase()}` : '';
-  applyFilters();
-}
-
-function toggleShowDisc() {
-  showDisc = !showDisc;
-  const btn = document.getElementById('showDiscBtn');
-  btn.classList.toggle('active', showDisc);
-  btn.innerHTML = showDisc ? '<span>🙈</span> Ocultar descontinuados' : '<span>👁</span> Mostrar descontinuados';
-  applyFilters();
-}
-
-function toggleDisc(codigo) {
-  const s = state[activeTab];
-  if (s.disc.has(codigo)) s.disc.delete(codigo);
-  else s.disc.add(codigo);
-  applyFilters();
-}
-
-function onQtyChange(codigo, val) {
-  const parsed = parseInt(val.replace(/\./g,'').replace(',',''));
-  if (!isNaN(parsed) && parsed >= 0) {
-    state[activeTab].qtds[codigo] = parsed;
-  }
-  applyFilters();
-}
-
-// ═══════════════════════════════════════════════════
-// SORT
-// ═══════════════════════════════════════════════════
-function sortBy(col) {
-  if (sortCol === col) sortDir *= -1;
-  else { sortCol = col; sortDir = 1; }
-  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
-  const map = { codigo:0, descricao:1, qtd:2, classe:3, unitario:4, total:-1 };
-  const ths = document.querySelectorAll('thead th');
-  const idx = ['codigo','descricao','classe','qtd','unitario','total'];
-  const thEl = ths[idx.indexOf(col)];
-  if (thEl) thEl.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
-  applyFilters();
-}
-
-// ═══════════════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════════════
-function applyFilters() {
-  const s     = state[activeTab];
-  const q     = document.getElementById('searchInput').value.toLowerCase().trim();
-  const data  = RAW[activeTab];
-  const tcls  = activeTab === 'hepr' ? 'total-hepr' : 'total-atox';
-
-  let rows = data.map(r => {
-    const [cod, desc, qtdOrig, cls, unit] = r;
-    const qtd   = s.qtds[cod] !== undefined ? s.qtds[cod] : qtdOrig;
-    const total = qtd * unit;
-    const disc  = s.disc.has(cod);
-    return { cod, desc, qtd, qtdOrig, cls, unit, total, disc };
-  });
-
-  // filter
-  rows = rows.filter(r => {
-    if (!showDisc && r.disc) return false;
-    if (!classes[r.cls]) return false;
-    if (q && !r.cod.toLowerCase().includes(q) && !r.desc.toLowerCase().includes(q)) return false;
-    return true;
-  });
-
-  // sort
-  if (sortCol) {
-    const key = { codigo:'cod', descricao:'desc', qtd:'qtd', classe:'cls', unitario:'unit', total:'total' }[sortCol];
-    rows.sort((a,b) => {
-      const av = a[key], bv = b[key];
-      return typeof av === 'string' ? av.localeCompare(bv) * sortDir : (av - bv) * sortDir;
-    });
-  }
-
-  // summary
-  const allActive = rows.filter(r => !r.disc);
-  const totalAtivo = allActive.reduce((s, r) => s + r.total, 0);
-  const totalGeral = rows.reduce((s, r) => s + r.total, 0);
-  const discCount  = rows.filter(r => r.disc).length;
-
-  document.getElementById('summaryBar').innerHTML = `
-    <div class="sum-card ${activeTab === 'hepr' ? 'hepr' : 'atox'}">
-      <div class="val">${brl(totalAtivo)}</div>
-      <div class="lbl">Total ativo</div>
-    </div>
-    <div class="sum-card">
-      <div class="val">${num(allActive.reduce((s,r)=>s+r.qtd,0))} m</div>
-      <div class="lbl">Metros ativos</div>
-    </div>
-    <div class="sum-card active-items">
-      <div class="val">${allActive.length}</div>
-      <div class="lbl">Itens ativos</div>
-    </div>
-    <div class="sum-card disc">
-      <div class="val">${discCount}</div>
-      <div class="lbl">Descontinuados</div>
-    </div>
-    <div class="sum-card">
-      <div class="val">${brl(totalGeral)}</div>
-      <div class="lbl">Total geral (vis.)</div>
-    </div>
-  `;
-
-  // table body
-  const tbody = document.getElementById('tableBody');
-  if (rows.length === 0) {
-    tbody.innerHTML = '';
-    document.getElementById('emptyMsg').style.display = 'block';
-    return;
-  }
-  document.getElementById('emptyMsg').style.display = 'none';
-
-  tbody.innerHTML = rows.map(r => {
-    const modified = s.qtds[r.cod] !== undefined && s.qtds[r.cod] !== r.qtdOrig;
-    const discCls  = r.disc ? 'discontinued' : '';
-    const btnTxt   = r.disc ? '↩ Reativar' : '✕ Descontinuar';
-    const btnCls   = r.disc ? 'disc-btn is-disc' : 'disc-btn';
-    return `
-    <tr class="${discCls}">
-      <td class="code-cell">${r.cod}</td>
-      <td class="desc-cell">${r.desc}</td>
-      <td><span class="badge badge-${r.cls}">${r.cls}</span></td>
-      <td class="num-cell">
-        <div class="qty-wrap" style="justify-content:flex-end">
-          <input
-            class="qty-input ${modified ? 'modified' : ''}"
-            type="text"
-            value="${num(r.qtd)}"
-            title="Clique para editar"
-            onblur="onQtyChange('${r.cod}', this.value)"
-            onkeydown="if(event.key==='Enter')this.blur()"
-            onfocus="this.select()"
-          >
-        </div>
-      </td>
-      <td class="num-cell">${brl(r.unit)}</td>
-      <td class="num-cell ${tcls}">${brl(r.total)}</td>
-      <td style="text-align:center">
-        <button class="${btnCls}" onclick="toggleDisc('${r.cod}')">${btnTxt}</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════════
-// EXPORT CSV
-// ═══════════════════════════════════════════════════
-function exportCSV() {
-  const s    = state[activeTab];
-  const data = RAW[activeTab];
-  const tabLabel = activeTab === 'hepr' ? 'HEPR' : 'HEPR_ATOX';
-
-  const header = ['Cenario','Codigo','Descricao','Classe','Qtd_Ideal','Qtd_Ajustada','Vlr_Unit','Total','Status'];
-  const rows = data.map(r => {
-    const [cod, desc, qtdOrig, cls, unit] = r;
-    const qtd   = s.qtds[cod] !== undefined ? s.qtds[cod] : qtdOrig;
-    const total = (qtd * unit).toFixed(2);
-    const st    = s.disc.has(cod) ? 'DESCONTINUADO' : 'ATIVO';
-    return [tabLabel, cod, `"${desc}"`, cls, qtdOrig, qtd, unit.toFixed(4), total, st].join(';');
-  });
-
-  const csv  = [header.join(';'), ...rows].join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `CD_Recife_${tabLabel}_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// INIT
-applyFilters();
+function exp(){const s=ST[tab],lbl=tab==='h'?'HEPR':'HEPR_ATOX';const hdr=['Cenario','Codigo','Descricao','Classe','Qtd_Ideal','Qtd_Ajustada','Vlr_Unit','Total','Status'];const rows=D[tab].map(r=>{const[cod,desc,q0,cls,unit]=r;const qtd=s.qtds[cod]!==undefined?s.qtds[cod]:q0;return[lbl,cod,`"${desc}"`,cls,q0,qtd,unit.toFixed(4),(qtd*unit).toFixed(2),s.disc.has(cod)?'DESCONTINUADO':'ATIVO'].join(';');});const csv=[hdr.join(';'),...rows].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download=`CD_Recife_${lbl}_${new Date().toISOString().slice(0,10)}.csv`;a.click();}
+render();
 </script>
 </body>
 </html>
