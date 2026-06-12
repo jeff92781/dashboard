@@ -1,721 +1,890 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Desempenho das Filiais</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-  <style>
-    :root{
-      --bg:#07111f;
-      --bg2:#0a1c31;
-      --panel:#10253d;
-      --panel2:#0d1d31;
-      --stroke:#25486c;
-      --stroke2:#35638d;
-      --text:#f4f8ff;
-      --muted:#8fb4dc;
-      --blue1:#38bdf8;
-      --blue2:#0ea5e9;
-      --blue3:#2563eb;
-      --blue4:#93c5fd;
-      --blue5:#60a5fa;
-      --cyan:#67e8f9;
-      --shadow: 0 20px 60px rgba(0,0,0,.35);
-      --radius: 22px;
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 28%),
-        radial-gradient(circle at 80% 10%, rgba(37,99,235,.16), transparent 24%),
-        linear-gradient(180deg,#061020 0%, #08182a 45%, #06101d 100%);
-      color:var(--text);
-      min-height:100vh;
-    }
-    .topbar{
-      padding:28px 32px 22px;
-      border-bottom:1px solid rgba(96,165,250,.18);
-      background:rgba(5,12,24,.74);
-      backdrop-filter:blur(18px);
-      position:sticky;top:0;z-index:20;
-    }
-    .header-row{display:flex;align-items:center;justify-content:space-between;gap:22px;margin-bottom:22px}
-    .brand{display:flex;align-items:center;gap:16px;min-width:0}
-    .logo{
-      width:64px;height:64px;border-radius:20px;
-      display:grid;place-items:center;
-      background:linear-gradient(135deg,#1d4ed8 0%,#38bdf8 55%,#0f766e 100%);
-      box-shadow:0 14px 35px rgba(14,165,233,.25);
-      font-weight:900;font-size:32px;color:white;
-    }
-    .kicker{font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:#7dd3fc;font-weight:900;margin-bottom:4px}
-    h1{margin:0;font-size:clamp(25px,2.2vw,38px);line-height:1.08;font-weight:900;letter-spacing:-.04em}
-    .subtitle{margin:8px 0 0;color:var(--muted);font-weight:600;font-size:15px}
-    .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-    button,.file-btn{
-      border:1px solid rgba(125,211,252,.35);
-      background:linear-gradient(180deg,rgba(28,64,105,.92),rgba(14,30,52,.92));
-      color:var(--text);font-weight:900;border-radius:16px;
-      padding:14px 18px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
-      transition:.2s ease;white-space:nowrap;
-    }
-    button:hover,.file-btn:hover{transform:translateY(-1px);border-color:#7dd3fc;background:linear-gradient(180deg,rgba(37,99,235,.45),rgba(14,30,52,.95))}
-    input[type=file]{display:none}
-    .filters{display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:14px;max-width:1280px}
-    .filter-card{
-      background:linear-gradient(135deg,rgba(16,37,61,.96),rgba(9,24,42,.95));
-      border:1px solid rgba(96,165,250,.22);border-radius:var(--radius);
-      padding:16px;box-shadow:var(--shadow);
-    }
-    .filter-card label{display:block;color:#bed6f2;text-transform:uppercase;font-weight:900;letter-spacing:.08em;font-size:13px;margin-bottom:10px}
-    .range-duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    input,select{
-      width:100%;border:1px solid rgba(125,211,252,.32);
-      border-radius:15px;background:#09172a;color:var(--text);padding:15px 16px;
-      outline:none;font-weight:800;font-size:15px;
-    }
-    input:focus,select:focus{border-color:#7dd3fc;box-shadow:0 0 0 4px rgba(56,189,248,.08)}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Previsão de Estoque — CD Recife</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
-    select{cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#93c5fd 50%),linear-gradient(135deg,#93c5fd 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:44px}
-    .multi-select{position:relative}
-    .multi-btn{
-      width:100%;min-height:51px;border:1px solid rgba(125,211,252,.32);border-radius:15px;background:#09172a;color:var(--text);
-      padding:15px 44px 15px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;font-weight:900;font-size:15px;text-align:left;
-      background-image:linear-gradient(45deg,transparent 50%,#93c5fd 50%),linear-gradient(135deg,#93c5fd 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;
-    }
-    .multi-btn:focus{outline:none;border-color:#7dd3fc;box-shadow:0 0 0 4px rgba(56,189,248,.08)}
-    .multi-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:30;background:#07182b;border:1px solid rgba(125,211,252,.36);border-radius:16px;padding:8px;box-shadow:0 18px 45px rgba(0,0,0,.45)}
-    .multi-select.open .multi-menu{display:grid;gap:6px}
-    .multi-option{display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:12px;color:#dbeafe;font-weight:900;cursor:pointer}
-    .multi-option:hover{background:rgba(56,189,248,.10)}
-    .multi-option input{width:17px;height:17px;accent-color:#38bdf8;cursor:pointer}
-    .multi-actions{display:flex;gap:8px;border-top:1px solid rgba(125,211,252,.18);padding-top:8px;margin-top:4px}
-    .multi-actions button{padding:9px 10px;border-radius:11px;font-size:12px;flex:1}
+  :root {
+    --bg:        #0e1117;
+    --surface:   #161b27;
+    --surface2:  #1e2537;
+    --border:    #2a3248;
+    --accent-h:  #00c2ff;
+    --accent-a:  #ff6b35;
+    --text:      #dce3f0;
+    --text-dim:  #7a89a8;
+    --green:     #29d984;
+    --yellow:    #f5c842;
+    --red:       #ff4d6d;
+    --class-a:   #29d984;
+    --class-b:   #f5c842;
+    --class-c:   #ff6b35;
+    --disc:      #3a4255;
+  }
 
-    main{padding:28px 32px 46px}
-    .section-title{margin:0 0 8px;font-size:30px;font-weight:900;letter-spacing:-.04em}
-    .period-label{color:#93c5fd;font-weight:600;margin-bottom:22px}
-    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
-    .metric{
-      position:relative;overflow:hidden;min-height:148px;
-      background:linear-gradient(135deg,rgba(17,39,63,.96),rgba(8,22,39,.98));
-      border:1px solid rgba(96,165,250,.23);border-radius:var(--radius);padding:22px;
-      box-shadow:var(--shadow);
-    }
-    .metric:after{
-      content:"";position:absolute;right:-45px;top:-55px;width:150px;height:150px;border-radius:50%;
-      background:radial-gradient(circle,rgba(56,189,248,.24),transparent 62%);
-    }
-    .metric .tag{
-      position:absolute;right:18px;top:18px;border:1px solid rgba(125,211,252,.32);
-      background:rgba(14,165,233,.16);border-radius:16px;padding:12px 14px;color:#7dd3fc;font-weight:900;
-    }
-    .metric-title{text-transform:uppercase;color:#c7ddf6;letter-spacing:.08em;font-size:13px;font-weight:900;margin-bottom:16px;position:relative;z-index:1}
-    .metric-value{font-size:clamp(26px,2.4vw,40px);font-weight:900;letter-spacing:-.05em;margin-bottom:8px;position:relative;z-index:1}
-    .metric-foot{font-weight:900;font-size:14px;position:relative;z-index:1;display:flex;align-items:center;gap:5px}
-    .metric-foot.positive{color:#86efac}
-    .metric-foot.negative{color:#fb7185}
-    .metric-foot.neutral{color:#93c5fd}
-    .grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(360px,.85fr);gap:18px;align-items:stretch}
-    .panel{
-      background:linear-gradient(135deg,rgba(15,36,60,.96),rgba(7,21,37,.98));
-      border:1px solid rgba(96,165,250,.22);border-radius:var(--radius);
-      padding:22px;box-shadow:var(--shadow);min-width:0;
-    }
-    .panel-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px}
-    .panel-title{margin:0;font-size:22px;font-weight:900;letter-spacing:-.04em}
-    .panel-sub{color:#9fc3eb;font-weight:800;font-size:13px;text-align:right}
-    #lineChart{min-height:485px}
-    #donutChart{min-height:360px}
-    .legend-list{display:grid;gap:10px;margin-top:8px}
-    .legend-item{
-      display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;
-      padding:12px 14px;border:1px solid rgba(96,165,250,.2);border-radius:14px;background:rgba(5,14,27,.44);
-      font-size:13px;font-weight:900;
-    }
-    .legend-name{display:flex;align-items:center;gap:10px;min-width:0}
-    .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;background:var(--blue1)}
-    .legend-value{color:#dbeafe;white-space:nowrap}
-    .legend-pct{color:#7dd3fc;white-space:nowrap}
-    .hint{margin-top:18px;color:#85a7cf;font-size:12px;font-weight:700;line-height:1.5}
-    .empty{display:none;margin-top:18px;border:1px dashed rgba(125,211,252,.45);border-radius:18px;padding:18px;color:#bfdbfe;background:rgba(14,165,233,.07);font-weight:700}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Correção para impressão: evita que o ApexCharts ultrapasse o painel */
-    .chart-box, #lineChart, #donutChart{width:100%;max-width:100%;overflow:hidden}
-    #lineChart .apexcharts-canvas, #lineChart .apexcharts-svg,
-    #donutChart .apexcharts-canvas, #donutChart .apexcharts-svg{max-width:100% !important}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
 
-    body.print-mode .actions, body.print-mode .filters { display: none !important; }
-    body.print-mode main { padding: 14px !important; }
-    body.print-mode .cards { grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; margin-bottom: 10px !important; }
-    body.print-mode .metric { min-height: 102px !important; padding: 14px 16px !important; border-radius: 16px !important; box-shadow: none !important; }
-    body.print-mode .metric .tag { display: none !important; }
-    body.print-mode .metric-title { font-size: 10px !important; margin-bottom: 8px !important; }
-    body.print-mode .metric-value { font-size: 25px !important; margin-bottom: 4px !important; }
-    body.print-mode .metric-foot { font-size: 11px !important; }
-    body.print-mode .grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, .78fr) !important; gap: 10px !important; align-items: stretch !important; }
-    body.print-mode .panel { padding: 14px !important; border-radius: 16px !important; box-shadow: none !important; min-width:0 !important; overflow:hidden !important; }
-    body.print-mode #lineChart { min-height: 380px !important; height: 380px !important; }
-    body.print-mode #donutChart { min-height: 255px !important; height: 255px !important; }
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 28px 16px;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
 
+  .logo-block { flex: 1 1 220px; }
+  .logo-block h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--text);
+  }
+  .logo-block span {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
 
-    @media print {
-      @page { size: A4 landscape; margin: 8mm; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-      html, body {
-        width: 297mm;
-        min-height: 210mm;
-        background: #07111f !important;
-        color: #f4f8ff !important;
-        overflow: visible !important;
-      }
-      body {
-        background:
-          radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 28%),
-          linear-gradient(180deg,#061020 0%, #08182a 100%) !important;
-      }
-      .topbar {
-        position: static !important;
-        padding: 12px 14px 10px !important;
-        border-bottom: 1px solid rgba(96,165,250,.25) !important;
-        background: rgba(5,12,24,.9) !important;
-        backdrop-filter: none !important;
-      }
-      .header-row { margin-bottom: 0 !important; }
-      .logo { width: 44px !important; height: 44px !important; border-radius: 14px !important; font-size: 24px !important; }
-      .kicker { font-size: 10px !important; }
-      h1 { font-size: 23px !important; }
-      .actions, .filters { display: none !important; }
-      main { padding: 14px !important; }
-      .section-title { font-size: 23px !important; margin-bottom: 2px !important; }
-      .period-label { margin-bottom: 10px !important; font-size: 12px !important; }
-      .cards { grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; margin-bottom: 10px !important; page-break-inside: avoid !important; }
-      .metric { min-height: 102px !important; padding: 14px 16px !important; border-radius: 16px !important; box-shadow: none !important; }
-      .metric .tag { display: none !important; }
-      .metric-title { font-size: 10px !important; margin-bottom: 8px !important; }
-      .metric-value { font-size: 25px !important; margin-bottom: 4px !important; }
-      .metric-foot { font-size: 11px !important; }
-      .grid { grid-template-columns: 1.45fr .8fr !important; gap: 10px !important; align-items: stretch !important; page-break-inside: avoid !important; }
-      .panel { padding: 14px !important; border-radius: 16px !important; box-shadow: none !important; page-break-inside: avoid !important; }
-      .panel-header { margin-bottom: 6px !important; }
-      .panel-title { font-size: 17px !important; }
-      .panel-sub { font-size: 10px !important; }
-      #lineChart { min-height: 380px !important; height: 380px !important; overflow:hidden !important; }
-      #donutChart { min-height: 255px !important; height: 255px !important; overflow:hidden !important; }
-      #lineChart .apexcharts-canvas, #lineChart .apexcharts-svg, #donutChart .apexcharts-canvas, #donutChart .apexcharts-svg { width: 100% !important; max-width: 100% !important; }
-      .legend-list { gap: 6px !important; margin-top: 4px !important; }
-      .legend-item { padding: 8px 9px !important; border-radius: 10px !important; font-size: 10px !important; gap: 7px !important; grid-template-columns: 1fr auto auto !important; }
-      .dot { width: 8px !important; height: 8px !important; }
-      .hint, .empty { display: none !important; }
-    }
-    @media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}
-    @media(max-width:760px){
-      .topbar{padding:20px 16px}.header-row{align-items:flex-start;flex-direction:column}.actions{width:100%;justify-content:stretch}.actions button,.actions .file-btn{flex:1;text-align:center}
-      .logo{width:54px;height:54px;border-radius:17px;font-size:28px}main{padding:22px 16px 34px}.filters,.range-duo,.cards{grid-template-columns:1fr}.filter-card:last-child{grid-column:auto}
-      .metric{min-height:128px}.grid{gap:14px}.panel{padding:16px}.panel-header{flex-direction:column}.panel-sub{text-align:left}#lineChart{min-height:390px}.legend-item{grid-template-columns:1fr;gap:6px}.legend-value,.legend-pct{padding-left:21px}
-    }
-  </style>
+  .tab-group {
+    display: flex;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    padding: 8px 18px;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active.hepr { color: var(--accent-h); border-color: var(--accent-h); background: rgba(0,194,255,.06); }
+  .tab-btn.active.hepratox { color: var(--accent-a); border-color: var(--accent-a); background: rgba(255,107,53,.06); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .ctrl-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; margin-right: 4px; }
+
+  input[type=text], select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    padding: 6px 10px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--accent-h); }
+  input[type=text] { width: 220px; }
+
+  .check-group { display: flex; gap: 8px; align-items: center; }
+  .check-group label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; cursor: pointer;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 11px;
+    transition: all .15s;
+  }
+  .check-group label:hover { border-color: var(--text-dim); }
+  .check-group input[type=checkbox] { display: none; }
+  .check-group label.active-a { border-color: var(--class-a); color: var(--class-a); background: rgba(41,217,132,.08); }
+  .check-group label.active-b { border-color: var(--class-b); color: var(--class-b); background: rgba(245,200,66,.08); }
+  .check-group label.active-c { border-color: var(--class-c); color: var(--class-c); background: rgba(255,107,53,.08); }
+
+  .ctrl-sep { width: 1px; height: 28px; background: var(--border); }
+
+  .show-disc-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-size: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .show-disc-btn.active { border-color: var(--red); color: var(--red); background: rgba(255,77,109,.07); }
+  .show-disc-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .spacer { flex: 1; }
+
+  .btn-export {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--accent-h);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-export:hover { opacity: .85; }
+  .btn-export.hepratox { background: var(--accent-a); }
+
+  /* ── SUMMARY BAR ── */
+  .summary {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .sum-card {
+    flex: 1;
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+  .sum-card:last-child { border-right: none; }
+  .sum-card .val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sum-card .lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+  .sum-card.hepr .val  { color: var(--accent-h); }
+  .sum-card.atox .val  { color: var(--accent-a); }
+  .sum-card.disc .val  { color: var(--red); }
+  .sum-card.active-items .val { color: var(--green); }
+
+  /* ── TABLE ── */
+  .table-wrapper {
+    overflow-x: auto;
+    padding: 0 16px 40px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--text-dim);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { color: var(--text); }
+  thead th.sort-asc::after  { content: ' ▲'; color: var(--accent-h); }
+  thead th.sort-desc::after { content: ' ▼'; color: var(--accent-h); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.discontinued {
+    opacity: .45;
+    background: rgba(58,66,85,.2);
+  }
+  tbody tr.discontinued td { text-decoration: line-through; color: var(--text-dim); }
+  tbody tr.discontinued td:first-child { text-decoration: none; }
+
+  td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  td.desc-cell { white-space: normal; min-width: 280px; max-width: 400px; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: .05em;
+  }
+  .badge-A { background: rgba(41,217,132,.15); color: var(--class-a); border: 1px solid rgba(41,217,132,.3); }
+  .badge-B { background: rgba(245,200,66,.12); color: var(--class-b); border: 1px solid rgba(245,200,66,.3); }
+  .badge-C { background: rgba(255,107,53,.12); color: var(--class-c); border: 1px solid rgba(255,107,53,.3); }
+
+  .code-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .num-cell { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+
+  /* editable qty */
+  .qty-wrap { display: flex; align-items: center; gap: 4px; }
+  .qty-input {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    text-align: right;
+    width: 90px;
+    padding: 3px 6px;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .qty-input:hover { border-color: var(--border); background: var(--surface2); }
+  .qty-input:focus { border-color: var(--accent-h); background: var(--surface2); outline: none; cursor: text; }
+  .qty-input.modified { color: var(--yellow); border-color: rgba(245,200,66,.4); }
+
+  .total-cell { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
+  .total-hepr  { color: rgba(0,194,255,.9); }
+  .total-atox  { color: rgba(255,107,53,.9); }
+
+  /* disc toggle */
+  .disc-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 11px;
+    padding: 3px 7px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .disc-btn:hover { border-color: var(--red); color: var(--red); }
+  .disc-btn.is-disc { border-color: var(--red); color: var(--red); background: rgba(255,77,109,.08); }
+  .disc-btn.is-disc:hover { background: rgba(255,77,109,.15); }
+
+  .empty-msg { text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 14px; }
+
+  /* accent line on active tab */
+  .accent-line { height: 2px; }
+  .accent-line.hepr    { background: var(--accent-h); }
+  .accent-line.hepratox { background: var(--accent-a); }
+</style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="header-row">
-      <div class="brand">
-        <div class="logo">C</div>
-        <div>
-          <div class="kicker">Cobreflex</div>
-          <h1>Dashboard de Desempenho das Filiais</h1>
-        </div>
-      </div>
-      <div class="actions">
-        <button id="printBtn">Imprimir PDF</button>
-        <button id="clearBtn">Limpar filtros</button>
-      </div>
-    </div>
-    <div class="filters">
-      <div class="filter-card">
-        <label>Período</label>
-        <div class="range-duo">
-          <input type="date" id="startDate" />
-          <input type="date" id="endDate" />
-        </div>
-      </div>
-      <div class="filter-card">
-        <label>Filial</label>
-        <div class="multi-select" id="branchMulti">
-          <button type="button" class="multi-btn" id="branchBtn">Todas as filiais</button>
-          <div class="multi-menu" id="branchMenu">
-            <label class="multi-option"><input type="checkbox" value="0114" checked>0114 - Lapa</label>
-            <label class="multi-option"><input type="checkbox" value="0109" checked>0109 - Sorocaba</label>
-            <label class="multi-option"><input type="checkbox" value="0104" checked>0104 - Joinville</label>
-            <label class="multi-option"><input type="checkbox" value="0116" checked>0116 - Praia Grande</label>
-            <div class="multi-actions">
-              <button type="button" id="selectAllBranches">Todas</button>
-              <button type="button" id="clearBranches">Limpar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="filter-card">
-        <label>Mês</label>
-        <div class="multi-select" id="monthMulti">
-          <button type="button" class="multi-btn" id="monthBtn">Todos os meses</button>
-          <div class="multi-menu" id="monthMenu">
-            <div class="multi-actions">
-              <button type="button" id="selectAllMonths">Todos</button>
-              <button type="button" id="clearMonths">Limpar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
 
-  <main>
-    <h2 class="section-title">Visão geral</h2>
-    <div class="period-label" id="periodLabel">Carregando período...</div>
+<header>
+  <div class="logo-block">
+    <h1>CD RECIFE — PREVISÃO DE ESTOQUE</h1>
+    <span>Cenários de abertura · Jun 2025</span>
+  </div>
+  <div class="tab-group">
+    <button class="tab-btn hepr active" onclick="switchTab('hepr')">HEPR</button>
+    <button class="tab-btn hepratox" onclick="switchTab('hepratox')">HEPR ATOX</button>
+  </div>
+</header>
 
-    <section class="cards">
-      <div class="metric"><div class="tag">R$</div><div class="metric-title">Faturamento total</div><div class="metric-value" id="totalRevenue">R$ 0</div><div class="metric-foot" id="totalFoot"></div></div>
-      <div class="metric"><div class="tag">MÊS</div><div class="metric-title">Média mensal</div><div class="metric-value" id="avgMonthly">R$ 0</div><div class="metric-foot" id="avgFoot"></div></div>
-      <div class="metric"><div class="tag">DIA</div><div class="metric-title">Média diária</div><div class="metric-value" id="avgDaily">R$ 0</div><div class="metric-foot" id="dailyFoot"></div></div>
-    </section>
+<div id="accent-bar" class="accent-line hepr"></div>
 
-    <section class="grid">
-      <div class="panel">
-        <div class="panel-header">
-          <h3 class="panel-title">Evolução mensal por filial</h3>
-          <div class="panel-sub" id="lineInfo">0 meses • 4 filiais</div>
-        </div>
-        <div id="lineChart"></div>
-        <div class="empty" id="emptyLine">Sem dados para o período selecionado.</div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <h3 class="panel-title">Participação no faturamento</h3>
-        </div>
-        <div id="donutChart"></div>
-        <div class="legend-list" id="donutLegend"></div>
-      </div>
-    </section>
-  </main>
+<div class="controls">
+  <span class="ctrl-label">Buscar</span>
+  <input type="text" id="searchInput" placeholder="código, descrição…" oninput="applyFilters()">
 
-  <script>
-    const EMBEDDED_ROWS = [{"date": "2026-01-05", "0104": 0.0, "0109": 71906.25, "0114": 284015.89, "0116": 28702.78}, {"date": "2026-01-06", "0104": 0.0, "0109": 91203.91, "0114": 549843.67, "0116": 31046.5}, {"date": "2026-01-07", "0104": 0.0, "0109": 92317.07, "0114": 1114406.45, "0116": 17403.49}, {"date": "2026-01-08", "0104": 0.0, "0109": 81392.93, "0114": 1488089.39, "0116": 146834.12}, {"date": "2026-01-09", "0104": 0.0, "0109": 66769.57, "0114": 891065.3, "0116": 66546.59}, {"date": "2026-01-10", "0104": 0.0, "0109": 9088.85, "0114": 26256.29, "0116": 2177.9}, {"date": "2026-01-12", "0104": 0.0, "0109": 98670.03, "0114": 805336.89, "0116": 125225.61}, {"date": "2026-01-13", "0104": 0.0, "0109": 67993.15, "0114": 813738.35, "0116": 37215.46}, {"date": "2026-01-14", "0104": 0.0, "0109": 126129.78, "0114": 836798.34, "0116": 99750.02}, {"date": "2026-01-15", "0104": 0.0, "0109": 118182.49, "0114": 978008.84, "0116": 58625.51}, {"date": "2026-01-16", "0104": 0.0, "0109": 93716.48, "0114": 562734.61, "0116": 32381.15}, {"date": "2026-01-17", "0104": 0.0, "0109": 20447.27, "0114": 134814.91, "0116": 35193.97}, {"date": "2026-01-19", "0104": 0.0, "0109": 24444.31, "0114": 403253.73, "0116": 36989.18}, {"date": "2026-01-20", "0104": 0.0, "0109": 82526.68, "0114": 536969.08, "0116": 71495.63}, {"date": "2026-01-21", "0104": 0.0, "0109": 84521.76, "0114": 856105.38, "0116": 423965.5}, {"date": "2026-01-22", "0104": 0.0, "0109": 78298.57, "0114": 726585.6, "0116": 150841.98}, {"date": "2026-01-23", "0104": 0.0, "0109": 70274.01, "0114": 421889.17, "0116": 95226.79}, {"date": "2026-01-24", "0104": 0.0, "0109": 150740.98, "0114": 322245.27, "0116": 0.0}, {"date": "2026-01-26", "0104": 0.0, "0109": 63379.31, "0114": 697611.4, "0116": 227214.13}, {"date": "2026-01-27", "0104": 0.0, "0109": 111137.99, "0114": 886897.73, "0116": 113064.71}, {"date": "2026-01-28", "0104": 0.0, "0109": 123863.44, "0114": 358800.4, "0116": 43459.97}, {"date": "2026-01-29", "0104": 0.0, "0109": 346552.34, "0114": 966175.06, "0116": 351362.8}, {"date": "2026-01-30", "0104": 0.0, "0109": 88883.23, "0114": 2296078.27, "0116": 61304.94}, {"date": "2026-01-31", "0104": 0.0, "0109": 12931.69, "0114": 661423.4, "0116": 28375.95}, {"date": "2026-02-02", "0104": 0.0, "0109": 141582.8, "0114": 457048.25, "0116": 12742.7}, {"date": "2026-02-03", "0104": 0.0, "0109": 96832.76, "0114": 1244428.77, "0116": 46626.18}, {"date": "2026-02-04", "0104": 9534.22, "0109": 62114.08, "0114": 893198.81, "0116": 81556.53}, {"date": "2026-02-05", "0104": 0.0, "0109": 530617.7, "0114": 872744.08, "0116": 180970.53}, {"date": "2026-02-06", "0104": 5067.6, "0109": 50044.46, "0114": 760766.67, "0116": 58301.65}, {"date": "2026-02-07", "0104": 0.0, "0109": 30283.92, "0114": 355491.61, "0116": 27847.45}, {"date": "2026-02-09", "0104": 808.68, "0109": 71801.65, "0114": 604807.56, "0116": 26783.38}, {"date": "2026-02-10", "0104": 0.0, "0109": 125636.91, "0114": 543795.88, "0116": 21156.64}, {"date": "2026-02-11", "0104": 1657.18, "0109": 60337.55, "0114": 1012748.61, "0116": 186522.15}, {"date": "2026-02-12", "0104": 14919.8, "0109": 118287.0, "0114": 824898.81, "0116": 60538.42}, {"date": "2026-02-13", "0104": 2760.55, "0109": 80431.26, "0114": 639690.1, "0116": 66456.58}, {"date": "2026-02-14", "0104": 0.0, "0109": 20009.11, "0114": 16867.5, "0116": 5987.35}, {"date": "2026-02-18", "0104": 23056.0, "0109": 83728.08, "0114": 1520881.7, "0116": 77196.07}, {"date": "2026-02-19", "0104": 20710.59, "0109": 150836.3, "0114": 1052504.14, "0116": 361975.78}, {"date": "2026-02-20", "0104": 43033.43, "0109": 74881.86, "0114": 1695564.58, "0116": 129277.03}, {"date": "2026-02-21", "0104": 0.0, "0109": 116989.45, "0114": 188419.42, "0116": 4661.67}, {"date": "2026-02-23", "0104": 19692.02, "0109": 53085.94, "0114": 961635.05, "0116": 193037.01}, {"date": "2026-02-24", "0104": 7454.0, "0109": 137586.35, "0114": 1404529.1, "0116": 74109.99}, {"date": "2026-02-25", "0104": 92032.0, "0109": 95053.47, "0114": 1874072.78, "0116": 81779.36}, {"date": "2026-02-26", "0104": 5945.0, "0109": 125771.32, "0114": 1121731.28, "0116": 68110.21}, {"date": "2026-02-27", "0104": 119279.0, "0109": 82477.38, "0114": 1161916.74, "0116": 93580.02}, {"date": "2026-02-28", "0104": 0.0, "0109": 156438.3, "0114": 539885.85, "0116": 129481.64}, {"date": "2026-03-02", "0104": 70124.45, "0109": 72560.03, "0114": 456096.67, "0116": 68158.33}, {"date": "2026-03-03", "0104": 36554.9, "0109": 93357.01, "0114": 1303247.13, "0116": 31351.18}, {"date": "2026-03-04", "0104": 9586.8, "0109": 137794.94, "0114": 483039.11, "0116": 55279.58}, {"date": "2026-03-05", "0104": 628.5, "0109": 90546.21, "0114": 414040.58, "0116": 211437.33}, {"date": "2026-03-06", "0104": 328817.58, "0109": 107409.75, "0114": 542830.88, "0116": 285007.92}, {"date": "2026-03-07", "0104": 0.0, "0109": 76243.65, "0114": 262548.37, "0116": 3506.5}, {"date": "2026-03-09", "0104": 0.0, "0109": 30764.48, "0114": 516727.48, "0116": 47917.52}, {"date": "2026-03-10", "0104": 29795.58, "0109": 65922.95, "0114": 744860.52, "0116": 115255.23}, {"date": "2026-03-11", "0104": 17796.88, "0109": 141830.18, "0114": 1028763.6, "0116": 20791.48}, {"date": "2026-03-12", "0104": 56437.9, "0109": 187986.41, "0114": 759229.45, "0116": 86669.84}, {"date": "2026-03-13", "0104": 26293.9, "0109": 94617.39, "0114": 1149392.75, "0116": 121790.68}, {"date": "2026-03-14", "0104": 0.0, "0109": 29379.78, "0114": 179048.67, "0116": 38365.48}, {"date": "2026-03-16", "0104": 110879.08, "0109": 79051.58, "0114": 545178.1, "0116": 33578.15}, {"date": "2026-03-17", "0104": 60320.87, "0109": 61422.93, "0114": 1014954.21, "0116": 82688.92}, {"date": "2026-03-18", "0104": 175830.16, "0109": 220713.3, "0114": 431637.69, "0116": 66276.83}, {"date": "2026-03-19", "0104": 73399.42, "0109": 75982.16, "0114": 504894.01, "0116": 84626.13}, {"date": "2026-03-20", "0104": 80754.75, "0109": 37827.43, "0114": 901968.17, "0116": 153051.9}, {"date": "2026-03-21", "0104": 0.0, "0109": 53583.18, "0114": 445491.59, "0116": 28971.65}, {"date": "2026-03-23", "0104": 23798.92, "0109": 96602.32, "0114": 841787.16, "0116": 48825.46}, {"date": "2026-03-24", "0104": 95849.9, "0109": 60234.28, "0114": 989004.27, "0116": 140966.82}, {"date": "2026-03-25", "0104": 22091.72, "0109": 75438.51, "0114": 618901.0, "0116": 182518.86}, {"date": "2026-03-26", "0104": 49215.27, "0109": 104896.17, "0114": 796883.95, "0116": 59139.51}, {"date": "2026-03-27", "0104": 41268.91, "0109": 40141.81, "0114": 1099401.91, "0116": 77097.16}, {"date": "2026-03-28", "0104": 0.0, "0109": 12009.07, "0114": 344742.41, "0116": 202444.94}, {"date": "2026-03-30", "0104": 62331.62, "0109": 79367.88, "0114": 1190293.21, "0116": 35092.06}, {"date": "2026-03-31", "0104": 179574.67, "0109": 171640.32, "0114": 1683030.77, "0116": 188797.22}, {"date": "2026-04-01", "0104": 11843.1, "0109": 44185.82, "0114": 518399.69, "0116": 51166.65}, {"date": "2026-04-02", "0104": 2425.86, "0109": 80162.53, "0114": 825070.58, "0116": 101268.5}, {"date": "2026-04-04", "0104": 0.0, "0109": 41161.04, "0114": 249709.53, "0116": 6061.34}, {"date": "2026-04-06", "0104": 29913.97, "0109": 74817.15, "0114": 1419985.13, "0116": 56907.03}, {"date": "2026-04-07", "0104": 155347.9, "0109": 39441.39, "0114": 1104778.15, "0116": 112665.57}, {"date": "2026-04-08", "0104": 11775.39, "0109": 43254.94, "0114": 817482.46, "0116": 54733.59}, {"date": "2026-04-09", "0104": 50629.89, "0109": 82600.04, "0114": 933444.39, "0116": 106049.96}, {"date": "2026-04-10", "0104": 2804.0, "0109": 84926.98, "0114": 1117274.85, "0116": 40402.5}, {"date": "2026-04-11", "0104": 0.0, "0109": 37260.09, "0114": 343431.98, "0116": 6963.67}, {"date": "2026-04-13", "0104": 11678.15, "0109": 26168.23, "0114": 909423.78, "0116": 82551.86}, {"date": "2026-04-14", "0104": 28741.84, "0109": 58517.84, "0114": 1035828.4, "0116": 213452.85}, {"date": "2026-04-15", "0104": 89718.05, "0109": 139035.57, "0114": 928382.86, "0116": 20059.6}, {"date": "2026-04-16", "0104": 7069.57, "0109": 87081.93, "0114": 862711.88, "0116": 37148.04}, {"date": "2026-04-17", "0104": 81501.69, "0109": 84455.53, "0114": 1613416.73, "0116": 117616.03}, {"date": "2026-04-18", "0104": 0.0, "0109": 69522.51, "0114": 522567.29, "0116": 5228.2}, {"date": "2026-04-20", "0104": 34956.0, "0109": 9026.92, "0114": 848535.58, "0116": 0.0}, {"date": "2026-04-21", "0104": 0.0, "0109": 0.0, "0114": 0.0, "0116": 0.0}, {"date": "2026-04-22", "0104": 68592.82, "0109": 42457.25, "0114": 1053724.24, "0116": 88044.9}, {"date": "2026-04-23", "0104": 10290.79, "0109": 80413.98, "0114": 1253798.09, "0116": 89932.73}, {"date": "2026-04-24", "0104": 52742.88, "0109": 120370.99, "0114": 691831.6, "0116": 48777.66}, {"date": "2026-04-25", "0104": 0.0, "0109": 13161.57, "0114": 273206.63, "0116": 50427.89}, {"date": "2026-04-27", "0104": 46344.2, "0109": 46981.0, "0114": 574764.47, "0116": 38133.88}, {"date": "2026-04-28", "0104": 70024.37, "0109": 160821.92, "0114": 1633078.9, "0116": 42078.09}, {"date": "2026-04-29", "0104": 2450.0, "0109": 85245.71, "0114": 856347.38, "0116": 85055.72}, {"date": "2026-04-30", "0104": 151615.91, "0109": 83633.63, "0114": 1587734.16, "0116": 83813.07}, {"date": "2026-05-02", "0104": 0.0, "0109": 11611.78, "0114": 188838.36, "0116": 1285.75}, {"date": "2026-05-04", "0104": 32691.7, "0109": 66190.45, "0114": 870061.02, "0116": 22236.74}, {"date": "2026-05-05", "0104": 0.0, "0109": 189652.84, "0114": 788191.98, "0116": 118124.7}, {"date": "2026-05-06", "0104": 0.0, "0109": 92851.52, "0114": 898930.53, "0116": 33490.7}, {"date": "2026-05-07", "0104": 23600.95, "0109": 62652.14, "0114": 1159965.32, "0116": 82514.06}, {"date": "2026-05-08", "0104": 26938.8, "0109": 251021.49, "0114": 1447223.14, "0116": 109303.06}, {"date": "2026-05-09", "0104": 0.0, "0109": 27391.46, "0114": 496060.76, "0116": 27448.39}, {"date": "2026-05-11", "0104": 13231.25, "0109": 80603.97, "0114": 707267.85, "0116": 84698.15}, {"date": "2026-05-12", "0104": 34093.17, "0109": 70733.97, "0114": 1184367.81, "0116": 108313.48}, {"date": "2026-05-13", "0104": 341449.76, "0109": 112961.8, "0114": 2266717.83, "0116": 98893.53}, {"date": "2026-05-14", "0104": 3318.2, "0109": 59757.09, "0114": 998777.64, "0116": 101097.19}, {"date": "2026-05-15", "0104": 10581.5, "0109": 126871.36, "0114": 657633.7, "0116": 39638.22}, {"date": "2026-05-16", "0104": 0.0, "0109": 39679.57, "0114": 286690.38, "0116": 9476.95}, {"date": "2026-05-18", "0104": 250.0, "0109": 71520.57, "0114": 667746.84, "0116": 54436.8}, {"date": "2026-05-19", "0104": 53317.6, "0109": 132791.84, "0114": 946498.5, "0116": 105540.87}, {"date": "2026-05-20", "0104": 12283.0, "0109": 132193.88, "0114": 1193166.46, "0116": 113782.65}, {"date": "2026-05-21", "0104": 38913.75, "0109": 65436.76, "0114": 2094690.87, "0116": 244789.69}, {"date": "2026-05-22", "0104": 5139.34, "0109": 60980.09, "0114": 891416.36, "0116": 41089.09}, {"date": "2026-05-23", "0104": 0.0, "0109": 17942.65, "0114": 135491.45, "0116": 5933.16}, {"date": "2026-05-25", "0104": 9200.85, "0109": 127201.47, "0114": 852511.59, "0116": 67766.31}, {"date": "2026-05-26", "0104": 1799.12, "0109": 85617.55, "0114": 992703.31, "0116": 113442.82}, {"date": "2026-05-27", "0104": 17061.01, "0109": 124723.43, "0114": 603545.96, "0116": 38165.42}, {"date": "2026-05-28", "0104": 8085.16, "0109": 135672.42, "0114": 1249518.7, "0116": 54642.68}, {"date": "2026-05-29", "0104": 21960.52, "0109": 61433.97, "0114": 901263.74, "0116": 174994.99}, {"date": "2026-05-30", "0104": 0.0, "0109": 19874.25, "0114": 734553.94, "0116": 2676.52}];
+  <div class="ctrl-sep"></div>
 
-    const BRANCHES = {
-      "0104": { label: "0104 - Joinville", full: "0104 - COB JOINVILLE", color: "#38bdf8" },
-      "0109": { label: "0109 - Sorocaba", full: "0109 - COB - SOROCABA", color: "#60a5fa" },
-      "0114": { label: "0114 - Lapa", full: "0114 - COB - LAPA", color: "#2563eb" },
-      "0116": { label: "0116 - Praia Grande", full: "0116 - COB - Praia - New", color: "#93c5fd" }
-    };
-    const BRANCH_ORDER = ["0114","0109","0104","0116"];
-    const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-    let rawRows = EMBEDDED_ROWS;
-    let lineChart, donutChart;
+  <span class="ctrl-label">Classe</span>
+  <div class="check-group">
+    <label id="lbl-a" class="active-a" onclick="toggleClass('A')"><input type="checkbox" id="chk-a" checked> A</label>
+    <label id="lbl-b" class="active-b" onclick="toggleClass('B')"><input type="checkbox" id="chk-b" checked> B</label>
+    <label id="lbl-c" class="active-c" onclick="toggleClass('C')"><input type="checkbox" id="chk-c" checked> C</label>
+  </div>
 
-    const fmtBRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-    const fmtBRLFull = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const fmtPct = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  <div class="ctrl-sep"></div>
 
-    function parseBRNumber(value){
-      if(value === null || value === undefined || value === "") return 0;
-      if(typeof value === "number") return Number.isFinite(value) ? value : 0;
-      let s = String(value).trim().replace(/R\$/g, "").replace(/\s/g, "");
-      if(!s || s.toLowerCase() === "nan") return 0;
-      if(s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
-      const n = Number(s);
-      return Number.isFinite(n) ? n : 0;
-    }
+  <button class="show-disc-btn" id="showDiscBtn" onclick="toggleShowDisc()">
+    <span>👁</span> Mostrar descontinuados
+  </button>
 
-    function parseDate(value){
-      if(!value) return null;
-      if(value instanceof Date && !isNaN(value)) return value;
-      if(typeof value === "number"){
-        const utc = Math.round((value - 25569) * 86400 * 1000);
-        return new Date(utc);
-      }
-      const s = String(value).trim();
-      let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      if(m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
-      m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-      if(m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
-      const d = new Date(s);
-      return isNaN(d) ? null : d;
-    }
+  <div class="spacer"></div>
 
-    function toISODate(d){
-      const pad = n => String(n).padStart(2,"0");
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    }
+  <button class="btn-export" id="exportBtn" onclick="exportCSV()">⬇ Exportar CSV</button>
+</div>
 
-    function monthKeyFromDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
-    function monthLabel(key){
-      const [y,m] = key.split("-").map(Number);
-      return `${MONTHS[m-1]}/${String(y).slice(-2)}`;
-    }
+<!-- SUMMARY -->
+<div class="summary" id="summaryBar"></div>
 
-    function normalizeImportedRows(jsonRows){
-      const result = [];
-      for(const row of jsonRows){
-        const keys = Object.keys(row);
-        const dateKey = keys.find(k => String(k).trim().toLowerCase() === "data") || keys.find(k => /data/i.test(k));
-        const date = parseDate(row[dateKey]);
-        if(!date) continue;
-        const out = { date: toISODate(date) };
-        for(const code of BRANCH_ORDER){
-          const foundKey = keys.find(k => String(k).includes(code)) || BRANCHES[code].full;
-          out[code] = parseBRNumber(row[foundKey]);
-        }
-        result.push(out);
-      }
-      return result;
-    }
+<!-- TABLE -->
+<div class="table-wrapper">
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th onclick="sortBy('codigo')">Código</th>
+        <th onclick="sortBy('descricao')">Descrição</th>
+        <th onclick="sortBy('classe')">Classe</th>
+        <th onclick="sortBy('qtd')" style="text-align:right">Qtd Ideal</th>
+        <th onclick="sortBy('unitario')" style="text-align:right">Vlr Unit.</th>
+        <th onclick="sortBy('total')" style="text-align:right">Total</th>
+        <th style="text-align:center; width:120px">Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div id="emptyMsg" class="empty-msg" style="display:none">Nenhum item encontrado com os filtros aplicados.</div>
+</div>
 
-    function parseTextTable(text){
-      const lines = text.trim().split(/\r?\n/).filter(Boolean);
-      if(!lines.length) return [];
-      const sep = lines[0].includes("\t") ? "\t" : ";";
-      const headers = lines[0].split(sep).map(h => h.trim() || "col");
-      const rows = lines.slice(1).map(line => {
-        const cells = line.split(sep);
-        const obj = {};
-        headers.forEach((h,i) => obj[h] = cells[i] ?? "");
-        return obj;
-      });
-      return normalizeImportedRows(rows);
-    }
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+const RAW = {
+  hepr: [
+    ["B0601004AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AMARELO",15000,"A",0.8231],
+    ["B0601004AZCL","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL CLARO",10000,"A",0.8231],
+    ["B0601004AZES","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL ESCURO",5000,"C",0.8231],
+    ["B0601004BR","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² BRANCO",15000,"B",0.8231],
+    ["B0601004CZ","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² CINZA",10000,"B",0.8231],
+    ["B0601004PT","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² PRETO",15000,"A",0.8231],
+    ["B0601004VD","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE",10000,"B",0.8231],
+    ["B0601004VD/AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE E AMARELO",2000,"C",0.8231],
+    ["B0601004VM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERMELHO",10000,"B",0.8231],
+    ["B0101005AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AMARELO",10000,"A",1.3278],
+    ["B0101005AZCL","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL CLARO",20000,"A",1.3278],
+    ["B0101005AZES","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL ESCURO",5000,"C",1.3278],
+    ["B0101005BR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² BRANCO",20000,"B",1.3278],
+    ["B0101005CZ","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² CINZA",5000,"C",1.3278],
+    ["B0101005MR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² MARROM",2000,"C",1.3278],
+    ["B0101005PT","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² PRETO",20000,"A",1.3278],
+    ["B0101005VD","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE",10000,"A",1.3278],
+    ["B0101005VD/AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE E AMARELO",2000,"C",1.3278],
+    ["B0101005VM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERMELHO",10000,"A",1.3278],
+    ["B0101006AM","CABO FLEXÍVEL 450/750V 1 X 4 mm² AMARELO",2000,"C",2.1469],
+    ["B0101006AZCL","CABO FLEXÍVEL 450/750V 1 X 4 mm² AZUL CLARO",5000,"A",2.1469],
+    ["B0101006BR","CABO FLEXÍVEL 450/750V 1 X 4 mm² BRANCO",2000,"B",2.1469],
+    ["B0101006CZ","CABO FLEXÍVEL 450/750V 1 X 4 mm² CINZA",2000,"C",2.1469],
+    ["B0101006PT","CABO FLEXÍVEL 450/750V 1 X 4 mm² PRETO",10000,"A",2.1469],
+    ["B0101006VD","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERDE",5000,"B",2.1469],
+    ["B0101006VM","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERMELHO",5000,"A",2.1469],
+    ["B0101007AM","CABO FLEXÍVEL 450/750V 1 X 6 mm² AMARELO",2000,"C",3.1853],
+    ["B0101007AZCL","CABO FLEXÍVEL 450/750V 1 X 6 mm² AZUL CLARO",4000,"A",3.1853],
+    ["B0101007BR","CABO FLEXÍVEL 450/750V 1 X 6 mm² BRANCO",2000,"B",3.1853],
+    ["B0101007PT","CABO FLEXÍVEL 450/750V 1 X 6 mm² PRETO",5000,"A",3.1853],
+    ["B0101007VD","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERDE",5000,"A",3.1853],
+    ["B0101007VM","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERMELHO",5000,"A",3.1853],
+    ["B0701004AM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AMARELO",5000,"A",0.8206],
+    ["B0701004AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AZUL CLARO",5000,"B",0.8206],
+    ["B0701004BR","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² BRANCO",5000,"B",0.8206],
+    ["B0701004PT","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² PRETO",5000,"A",0.8206],
+    ["B0701004VD","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERDE",5000,"A",0.8206],
+    ["B0701004VM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERMELHO",5000,"A",0.8206],
+    ["B0701005AM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AMARELO",5000,"B",1.3718],
+    ["B0701005AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AZUL CLARO",5000,"A",1.3718],
+    ["B0701005BR","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² BRANCO",5000,"A",1.3718],
+    ["B0701005PT","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² PRETO",10000,"A",1.3718],
+    ["B0701005VD","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERDE",5000,"A",1.3718],
+    ["B0701005VM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERMELHO",5000,"B",1.3718],
+    ["B0701006AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² AZUL CLARO",5000,"A",2.169],
+    ["B0701006BR","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² BRANCO",2000,"B",2.169],
+    ["B0701006PT","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² PRETO",5000,"A",2.169],
+    ["B0701006VD","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERDE",5000,"A",2.169],
+    ["B0701006VM","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERMELHO",5000,"A",2.169],
+    ["B0701007AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² AZUL CLARO",4000,"B",3.1784],
+    ["B0701007PT","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² PRETO",8000,"A",3.1784],
+    ["B0701007VD","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERDE",4000,"B",3.1784],
+    ["B0701007VM","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERMELHO",4000,"C",3.1784],
+    ["B0101010AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² AZUL CLARO",4000,"B",5.4488],
+    ["B0101010PT","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² PRETO",8000,"A",5.4488],
+    ["B0101010VD","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² VERDE",4000,"B",5.4488],
+    ["B0101016AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² AZUL CLARO",4000,"B",8.4775],
+    ["B0101016PT","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² PRETO",8000,"A",8.4775],
+    ["B0101016VD","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² VERDE",4000,"A",8.4775],
+    ["B0101025AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² AZUL CLARO",3000,"B",13.3512],
+    ["B0101025PT","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² PRETO",6000,"A",13.3512],
+    ["B0101025VD","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² VERDE",3000,"B",13.3512],
+    ["B0101035AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² AZUL CLARO",2000,"B",19.0793],
+    ["B0101035PT","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² PRETO",4000,"A",18.988],
+    ["B0101035VD","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² VERDE",2000,"C",18.988],
+    ["E1801004AM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² AMARELO",2000,"B",0.9659],
+    ["E1801004AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² AZUL CLARO",2000,"C",0.9659],
+    ["E1801004BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² BRANCO",2000,"B",0.9659],
+    ["E1801004PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² PRETO",4000,"A",0.9659],
+    ["E1801004VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² VERDE",2000,"B",0.9659],
+    ["E1801004VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 1,5 mm² VERMELHO",2000,"B",0.9659],
+    ["E1801005AM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² AMARELO",2000,"C",1.5204],
+    ["E1801005AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² AZUL CLARO",2000,"B",1.5204],
+    ["E1801005BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² BRANCO",2000,"C",1.5204],
+    ["E1801005CZ","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² CINZA",2000,"C",1.5204],
+    ["E1801005PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² PRETO",4000,"A",1.5204],
+    ["E1801005VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² VERDE",2000,"B",1.5204],
+    ["E1801005VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 2,5 mm² VERMELHO",2000,"B",1.5204],
+    ["E1801006AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² AZUL CLARO",2000,"B",2.3331],
+    ["E1801006BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² BRANCO",2000,"C",2.3331],
+    ["E1801006PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² PRETO",4000,"A",2.3331],
+    ["E1801006VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² VERDE",2000,"B",2.3331],
+    ["E1801006VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 4 mm² VERMELHO",2000,"C",2.3331],
+    ["E1801007AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² AZUL CLARO",2000,"B",3.3849],
+    ["E1801007BR","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² BRANCO",2000,"C",3.3849],
+    ["E1801007PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² PRETO",4000,"A",3.3849],
+    ["E1801007VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² VERDE",2000,"B",3.3849],
+    ["E1801007VM","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 6 mm² VERMELHO",2000,"C",3.3849],
+    ["E1801010AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² AZUL CLARO",4000,"B",5.6615],
+    ["E1801010PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² PRETO",8000,"A",5.6615],
+    ["E1801010VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 10 mm² VERDE",2000,"B",5.6615],
+    ["E1801016AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² AZUL CLARO",3500,"B",8.7188],
+    ["E1801016PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² PRETO",7000,"A",8.7188],
+    ["E1801016VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 16 mm² VERDE",2000,"A",8.7188],
+    ["E1801025AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² AZUL CLARO",2500,"B",13.619],
+    ["E1801025PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² PRETO",5000,"A",13.619],
+    ["E1801025VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 25 mm² VERDE",1000,"B",13.619],
+    ["E1801035AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² AZUL CLARO",2000,"B",19.3296],
+    ["E1801035PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² PRETO",4000,"A",19.3296],
+    ["E1801035VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 35 mm² VERDE",1000,"B",19.3296],
+    ["E1801050AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² AZUL CLARO",1500,"B",27.6173],
+    ["E1801050PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² PRETO",3000,"A",27.6173],
+    ["E1801050VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 50 mm² VERDE",1000,"B",27.6173],
+    ["E1801070AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² AZUL CLARO",1000,"B",40.0743],
+    ["E1801070PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² PRETO",2000,"A",40.0743],
+    ["E1801070VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 70 mm² VERDE",500,"B",40.0743],
+    ["E1801095AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² AZUL CLARO",1000,"B",53.3976],
+    ["E1801095PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² PRETO",2000,"A",53.3976],
+    ["E1801095VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 95 mm² VERDE",500,"B",53.3976],
+    ["E1801120AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² AZUL CLARO",800,"B",68.2863],
+    ["E1801120PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² PRETO",1600,"A",68.2863],
+    ["E1801120VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 120 mm² VERDE",400,"B",68.2863],
+    ["E1801150AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² AZUL CLARO",500,"B",85.5393],
+    ["E1801150PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² PRETO",1000,"A",85.5393],
+    ["E1801150VD","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 150 mm² VERDE",400,"C",85.5393],
+    ["E1801185AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 185 mm² AZUL CLARO",500,"B",103.4311],
+    ["E1801185PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 185 mm² PRETO",1000,"A",103.4311],
+    ["E1801240AZCL","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 240 mm² AZUL CLARO",200,"B",137.7322],
+    ["E1801240PT","CABO FLEXÍVEL HEPR 0,6/1KV 1 x 240 mm² PRETO",400,"A",137.7322],
+    ["E1802004PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 1,5 mm² PRETO",2000,"C",2.1424],
+    ["E1802005PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 2,5 mm² PRETO",2000,"B",3.3261],
+    ["E1803004PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 1,5 mm² PRETO",3000,"A",2.9527],
+    ["E1803005PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 2,5 mm² PRETO",6000,"A",4.7106],
+    ["E1803006PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 4 mm² PRETO",2000,"A",7.2304],
+    ["E1803007PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 6 mm² PRETO",1000,"B",10.4053],
+    ["E1803010PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 10 mm² PRETO",500,"B",17.5236],
+    ["E1803016PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 16 mm² PRETO",500,"B",27.0405],
+    ["E1804004PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 1,5 mm² PRETO",3000,"C",3.8485],
+    ["E1804005PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 2,5 mm² PRETO",2000,"B",6.1181],
+    ["E1804006PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 4 mm² PRETO",1000,"A",9.444],
+    ["E1804007PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 6 mm² PRETO",1000,"A",13.6938],
+    ["E1804010PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 10 mm² PRETO",500,"A",23.0915],
+    ["E1804016PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 16 mm² PRETO",500,"A",35.6042],
+    ["B0202004PT","CABO FLEXÍVEL P.P 500V 2 x 1,5 mm² PRETO",4000,"A",1.6618],
+    ["B0202005PT","CABO FLEXÍVEL P.P 500V 2 x 2,5 mm² PRETO",6000,"A",2.7791],
+    ["B0203004PT","CABO FLEXÍVEL P.P 500V 3 x 1,5 mm² PRETO",4000,"A",2.4927],
+    ["B0203005PT","CABO FLEXÍVEL P.P 500V 3 x 2,5 mm² PRETO",6000,"A",4.1686],
+    ["B0203006PT","CABO FLEXÍVEL P.P 500V 3 x 4 mm² PRETO",1000,"C",6.584],
+    ["B0203007PT","CABO FLEXÍVEL P.P 500V 3 x 6 mm² PRETO",1000,"C",9.6425],
+    ["B0204004PT","CABO FLEXÍVEL P.P 500V 4 x 1,5 mm² PRETO",2000,"B",3.3236],
+    ["B0204005PT","CABO FLEXÍVEL P.P 500V 4 x 2,5 mm² PRETO",2000,"B",5.5582],
+    ["B0204006PT","CABO FLEXÍVEL P.P 500V 4 x 4 mm² PRETO",1000,"C",8.7787],
+    ["H0401025","CABO COBRE NÚ TMD 1 X 25 mm² 7FIOS NORMA",2000,"B",13.4637],
+    ["H0401035","CABO COBRE NÚ TMD 1 X 35 mm² 7FIOS NORMA",2000,"A",19.8294],
+    ["H0201050","CABO COBRE NÚ TM 1 X 50 mm² 19FIOS NORMA",2000,"A",27.5552],
+    ["H0401050","CABO COBRE NÚ TMD 1 X 50 mm² 7FIOS NORMA",2000,"C",28.5543],
+  ],
+  hepratox: [
+    ["B0601004AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AMARELO",15000,"A",0.8231],
+    ["B0601004AZCL","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL CLARO",10000,"A",0.8231],
+    ["B0601004AZES","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² AZUL ESCURO",5000,"C",0.8231],
+    ["B0601004BR","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² BRANCO",15000,"B",0.8231],
+    ["B0601004CZ","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² CINZA",10000,"B",0.8231],
+    ["B0601004PT","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² PRETO",15000,"A",0.8231],
+    ["B0601004VD","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE",10000,"B",0.8231],
+    ["B0601004VD/AM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERDE E AMARELO",2000,"C",0.8231],
+    ["B0601004VM","CABO FLEXÍVEL 450/750V 1 X 1,5 mm² VERMELHO",10000,"B",0.8231],
+    ["B0101005AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AMARELO",10000,"A",1.3278],
+    ["B0101005AZCL","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL CLARO",20000,"A",1.3278],
+    ["B0101005AZES","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² AZUL ESCURO",5000,"C",1.3278],
+    ["B0101005BR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² BRANCO",20000,"B",1.3278],
+    ["B0101005CZ","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² CINZA",5000,"C",1.3278],
+    ["B0101005MR","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² MARROM",2000,"C",1.3278],
+    ["B0101005PT","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² PRETO",20000,"A",1.3278],
+    ["B0101005VD","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE",10000,"A",1.3278],
+    ["B0101005VD/AM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERDE E AMARELO",2000,"C",1.3278],
+    ["B0101005VM","CABO FLEXÍVEL 450/750V 1 X 2,5 mm² VERMELHO",10000,"A",1.3278],
+    ["B0101006AM","CABO FLEXÍVEL 450/750V 1 X 4 mm² AMARELO",2000,"C",2.1469],
+    ["B0101006AZCL","CABO FLEXÍVEL 450/750V 1 X 4 mm² AZUL CLARO",5000,"A",2.1469],
+    ["B0101006BR","CABO FLEXÍVEL 450/750V 1 X 4 mm² BRANCO",2000,"B",2.1469],
+    ["B0101006CZ","CABO FLEXÍVEL 450/750V 1 X 4 mm² CINZA",2000,"C",2.1469],
+    ["B0101006PT","CABO FLEXÍVEL 450/750V 1 X 4 mm² PRETO",10000,"A",2.1469],
+    ["B0101006VD","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERDE",5000,"B",2.1469],
+    ["B0101006VM","CABO FLEXÍVEL 450/750V 1 X 4 mm² VERMELHO",5000,"A",2.1469],
+    ["B0101007AM","CABO FLEXÍVEL 450/750V 1 X 6 mm² AMARELO",2000,"C",3.1853],
+    ["B0101007AZCL","CABO FLEXÍVEL 450/750V 1 X 6 mm² AZUL CLARO",4000,"A",3.1853],
+    ["B0101007BR","CABO FLEXÍVEL 450/750V 1 X 6 mm² BRANCO",2000,"B",3.1853],
+    ["B0101007PT","CABO FLEXÍVEL 450/750V 1 X 6 mm² PRETO",5000,"A",3.1853],
+    ["B0101007VD","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERDE",5000,"A",3.1853],
+    ["B0101007VM","CABO FLEXÍVEL 450/750V 1 X 6 mm² VERMELHO",5000,"A",3.1853],
+    ["B0701004AM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AMARELO",5000,"A",0.8206],
+    ["B0701004AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² AZUL CLARO",5000,"B",0.8206],
+    ["B0701004BR","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² BRANCO",5000,"B",0.8206],
+    ["B0701004PT","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² PRETO",5000,"A",0.8206],
+    ["B0701004VD","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERDE",5000,"A",0.8206],
+    ["B0701004VM","CABO FLEXÍVEL 450/750V ATOX 1 X 1,5 mm² VERMELHO",5000,"A",0.8206],
+    ["B0701005AM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AMARELO",5000,"B",1.3718],
+    ["B0701005AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² AZUL CLARO",5000,"A",1.3718],
+    ["B0701005BR","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² BRANCO",5000,"A",1.3718],
+    ["B0701005PT","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² PRETO",10000,"A",1.3718],
+    ["B0701005VD","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERDE",5000,"A",1.3718],
+    ["B0701005VM","CABO FLEXÍVEL 450/750V ATOX 1 X 2,5 mm² VERMELHO",5000,"B",1.3718],
+    ["B0701006AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² AZUL CLARO",5000,"A",2.169],
+    ["B0701006BR","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² BRANCO",2000,"B",2.169],
+    ["B0701006PT","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² PRETO",5000,"A",2.169],
+    ["B0701006VD","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERDE",5000,"A",2.169],
+    ["B0701006VM","CABO FLEXÍVEL 450/750V ATOX 1 X 4 mm² VERMELHO",5000,"A",2.169],
+    ["B0701007AZCL","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² AZUL CLARO",4000,"B",3.1784],
+    ["B0701007PT","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² PRETO",8000,"A",3.1784],
+    ["B0701007VD","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERDE",4000,"B",3.1784],
+    ["B0701007VM","CABO FLEXÍVEL 450/750V ATOX 1 X 6 mm² VERMELHO",4000,"C",3.1784],
+    ["B0101010AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² AZUL CLARO",4000,"B",5.4488],
+    ["B0101010PT","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² PRETO",8000,"A",5.4488],
+    ["B0101010VD","CABO FLEXÍVEL BWF 450/750V 1 x 10 mm² VERDE",4000,"B",5.4488],
+    ["B0101016AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² AZUL CLARO",4000,"B",8.4775],
+    ["B0101016PT","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² PRETO",8000,"A",8.4775],
+    ["B0101016VD","CABO FLEXÍVEL BWF 450/750V 1 x 16 mm² VERDE",4000,"A",8.4775],
+    ["B0101025AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² AZUL CLARO",3000,"B",13.3512],
+    ["B0101025PT","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² PRETO",6000,"A",13.3512],
+    ["B0101025VD","CABO FLEXÍVEL BWF 450/750V 1 x 25 mm² VERDE",3000,"B",13.3512],
+    ["B0101035AZCL","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² AZUL CLARO",2000,"B",19.0793],
+    ["B0101035PT","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² PRETO",4000,"A",18.988],
+    ["B0101035VD","CABO FLEXÍVEL BWF 450/750V 1 x 35 mm² VERDE",2000,"C",18.988],
+    ["E2401004AM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² AMARELO",2000,"B",0.8197],
+    ["E2401004AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² AZUL CLARO",2000,"C",0.8197],
+    ["E2401004BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² BRANCO",2000,"B",0.8197],
+    ["E2401004PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² PRETO",4000,"A",0.8197],
+    ["E2401004VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² VERDE",2000,"B",0.8197],
+    ["E2401004VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 1,5 mm² VERMELHO",2000,"B",0.8197],
+    ["E2401005AM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² AMARELO",2000,"C",1.3578],
+    ["E2401005AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² AZUL CLARO",2000,"B",1.3578],
+    ["E2401005BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² BRANCO",2000,"C",1.3578],
+    ["E2401005CZ","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² CINZA",2000,"C",1.3578],
+    ["E2401005PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² PRETO",4000,"A",1.3578],
+    ["E2401005VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² VERDE",2000,"B",1.3578],
+    ["E2401005VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 2,5 mm² VERMELHO",2000,"B",1.3578],
+    ["E2401006AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² AZUL CLARO",2000,"B",2.1515],
+    ["E2401006BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² BRANCO",2000,"C",2.1515],
+    ["E2401006PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² PRETO",4000,"A",2.1515],
+    ["E2401006VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² VERDE",2000,"B",2.1515],
+    ["E2401006VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 4 mm² VERMELHO",2000,"C",2.1515],
+    ["E2401007AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² AZUL CLARO",2000,"B",3.1574],
+    ["E2401007BR","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² BRANCO",2000,"C",3.1574],
+    ["E2401007PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² PRETO",4000,"A",3.1574],
+    ["E2401007VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² VERDE",2000,"B",3.1574],
+    ["E2401007VM","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 6 mm² VERMELHO",2000,"C",3.1574],
+    ["E2401010AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² AZUL CLARO",4000,"B",5.3881],
+    ["E2401010PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² PRETO",8000,"A",5.3881],
+    ["E2401010VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 10 mm² VERDE",2000,"B",5.3881],
+    ["E2401016AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² AZUL CLARO",3500,"B",8.4052],
+    ["E2401016PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² PRETO",7000,"A",8.4052],
+    ["E2401016VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 16 mm² VERDE",2000,"A",8.4052],
+    ["E2401025AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² AZUL CLARO",2500,"B",13.1813],
+    ["E2401025PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² PRETO",5000,"A",13.1813],
+    ["E2401025VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 25 mm² VERDE",1000,"B",13.1813],
+    ["E2401035AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² AZUL CLARO",2000,"B",18.8251],
+    ["E2401035PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² PRETO",4000,"A",18.8251],
+    ["E2401035VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 35 mm² VERDE",1000,"B",18.8251],
+    ["E2401050AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² AZUL CLARO",1500,"B",27.0056],
+    ["E2401050PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² PRETO",3000,"A",27.0056],
+    ["E2401050VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 50 mm² VERDE",1000,"B",27.0056],
+    ["E2401070AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² AZUL CLARO",1000,"B",39.3548],
+    ["E2401070PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² PRETO",2000,"A",39.3548],
+    ["E2401070VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 70 mm² VERDE",500,"B",39.3548],
+    ["E2401095AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² AZUL CLARO",1000,"B",52.5019],
+    ["E2401095PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² PRETO",2000,"A",52.5019],
+    ["E2401095VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 95 mm² VERDE",500,"B",52.5019],
+    ["E2401120AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² AZUL CLARO",800,"B",67.274],
+    ["E2401120PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² PRETO",1600,"A",67.274],
+    ["E2401120VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 120 mm² VERDE",400,"B",67.274],
+    ["E2401150AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² AZUL CLARO",500,"B",84.315],
+    ["E2401150PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² PRETO",1000,"A",84.315],
+    ["E2401150VD","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 150 mm² VERDE",400,"C",84.315],
+    ["E2401185AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 185 mm² AZUL CLARO",500,"B",102.0974],
+    ["E2401185PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 185 mm² PRETO",1000,"A",102.0974],
+    ["E2401240AZCL","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 240 mm² AZUL CLARO",200,"B",136.0955],
+    ["E2401240PT","CABO FLEXÍVEL HEPR ATOX 0,6/1KV 1 x 240 mm² PRETO",400,"A",136.0955],
+    ["E1802004PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 1,5 mm² PRETO",2000,"C",2.1424],
+    ["E1802005PT","CABO FLEXÍVEL HEPR 0,6/1KV 2 x 2,5 mm² PRETO",2000,"B",3.3261],
+    ["E1803004PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 1,5 mm² PRETO",3000,"A",2.9527],
+    ["E1803005PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 2,5 mm² PRETO",6000,"A",4.7106],
+    ["E1803006PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 4 mm² PRETO",2000,"A",7.2304],
+    ["E1803007PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 6 mm² PRETO",1000,"B",10.4053],
+    ["E1803010PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 10 mm² PRETO",500,"B",17.5236],
+    ["E1803016PT","CABO FLEXÍVEL HEPR 0,6/1KV 3 x 16 mm² PRETO",500,"B",27.0405],
+    ["E1804004PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 1,5 mm² PRETO",3000,"C",3.8485],
+    ["E1804005PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 2,5 mm² PRETO",2000,"B",6.1181],
+    ["E1804006PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 4 mm² PRETO",1000,"A",9.444],
+    ["E1804007PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 6 mm² PRETO",1000,"A",13.6938],
+    ["E1804010PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 10 mm² PRETO",500,"A",23.0915],
+    ["E1804016PT","CABO FLEXÍVEL HEPR 0,6/1KV 4 x 16 mm² PRETO",500,"A",35.6042],
+    ["B0202004PT","CABO FLEXÍVEL P.P 500V 2 x 1,5 mm² PRETO",4000,"A",1.6618],
+    ["B0202005PT","CABO FLEXÍVEL P.P 500V 2 x 2,5 mm² PRETO",6000,"A",2.7791],
+    ["B0203004PT","CABO FLEXÍVEL P.P 500V 3 x 1,5 mm² PRETO",4000,"A",2.4927],
+    ["B0203005PT","CABO FLEXÍVEL P.P 500V 3 x 2,5 mm² PRETO",6000,"A",4.1686],
+    ["B0203006PT","CABO FLEXÍVEL P.P 500V 3 x 4 mm² PRETO",1000,"C",6.584],
+    ["B0203007PT","CABO FLEXÍVEL P.P 500V 3 x 6 mm² PRETO",1000,"C",9.6425],
+    ["B0204004PT","CABO FLEXÍVEL P.P 500V 4 x 1,5 mm² PRETO",2000,"B",3.3236],
+    ["B0204005PT","CABO FLEXÍVEL P.P 500V 4 x 2,5 mm² PRETO",2000,"B",5.5582],
+    ["B0204006PT","CABO FLEXÍVEL P.P 500V 4 x 4 mm² PRETO",1000,"C",8.7787],
+    ["H0401025","CABO COBRE NÚ TMD 1 X 25 mm² 7FIOS NORMA",2000,"B",13.4637],
+    ["H0401035","CABO COBRE NÚ TMD 1 X 35 mm² 7FIOS NORMA",2000,"A",19.8294],
+    ["H0201050","CABO COBRE NÚ TM 1 X 50 mm² 19FIOS NORMA",2000,"A",27.5552],
+    ["H0401050","CABO COBRE NÚ TMD 1 X 50 mm² 7FIOS NORMA",2000,"C",28.5543],
+  ]
+};
 
-    function getFilteredRows(){
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      const selectedMonths = getSelectedMonths();
-      return rawRows.filter(r => {
-        const d = parseDate(r.date);
-        const key = d ? monthKeyFromDate(d) : "";
-        return (!start || r.date >= start) && (!end || r.date <= end) && (!selectedMonths.length || selectedMonths.includes(key));
-      });
-    }
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let activeTab = 'hepr';
+let showDisc  = false;
+let sortCol   = null;
+let sortDir   = 1;
 
-    function aggregateMonthly(rows){
-      const map = new Map();
-      for(const r of rows){
-        const d = parseDate(r.date);
-        if(!d) continue;
-        const key = monthKeyFromDate(d);
-        if(!map.has(key)) map.set(key, { key, label: monthLabel(key), "0104":0, "0109":0, "0114":0, "0116":0 });
-        const m = map.get(key);
-        for(const code of BRANCH_ORDER) m[code] += Number(r[code] || 0);
-      }
-      return [...map.values()].sort((a,b) => a.key.localeCompare(b.key));
-    }
+// per-tab state: discontinued & modified quantities
+const state = {
+  hepr:     { disc: new Set(), qtds: {} },
+  hepratox: { disc: new Set(), qtds: {} }
+};
 
-    function totalsByBranch(rows){
-      const totals = {"0104":0,"0109":0,"0114":0,"0116":0};
-      for(const r of rows){ for(const code of BRANCH_ORDER) totals[code] += Number(r[code] || 0); }
-      return totals;
-    }
+const classes = { A: true, B: true, C: true };
 
-    function setupDateFilters(){
-      if(!rawRows.length) return;
-      const dates = rawRows.map(r => r.date).sort();
-      const min = dates[0], max = dates[dates.length-1];
-      const start = document.getElementById("startDate"), end = document.getElementById("endDate");
-      start.min = min; start.max = max; end.min = min; end.max = max;
-      start.value = min; end.value = max;
-    }
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const brl = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = v => v.toLocaleString('pt-BR');
 
-    function getAvailableMonths(){
-      return [...new Set(rawRows.map(r => {
-        const d = parseDate(r.date);
-        return d ? monthKeyFromDate(d) : null;
-      }).filter(Boolean))].sort();
-    }
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.tab-btn.${tab}`).classList.add('active');
+  document.getElementById('accent-bar').className = `accent-line ${tab}`;
+  const exp = document.getElementById('exportBtn');
+  exp.className = tab === 'hepr' ? 'btn-export' : 'btn-export hepratox';
+  applyFilters();
+}
 
-    function setupMonthFilter(){
-      const menu = document.getElementById("monthMenu");
-      const actions = menu.querySelector(".multi-actions");
-      menu.querySelectorAll("label.multi-option").forEach(el => el.remove());
-      getAvailableMonths().forEach(key => {
-        const label = document.createElement("label");
-        label.className = "multi-option";
-        label.innerHTML = `<input type="checkbox" value="${key}" checked>${monthLabel(key)}`;
-        menu.insertBefore(label, actions);
-      });
-      menu.querySelectorAll('input[type="checkbox"]').forEach(input => input.addEventListener("change", () => { updateMonthButton(); updateDashboard(); }));
-      updateMonthButton();
-    }
+function toggleClass(cls) {
+  classes[cls] = !classes[cls];
+  const lbl = document.getElementById(`lbl-${cls.toLowerCase()}`);
+  const chk = document.getElementById(`chk-${cls.toLowerCase()}`);
+  chk.checked = classes[cls];
+  lbl.className = classes[cls] ? `active-${cls.toLowerCase()}` : '';
+  applyFilters();
+}
 
-    function updateDashboard(){
-      const rows = getFilteredRows();
-      const monthly = aggregateMonthly(rows);
-      const activeCodes = getSelectedBranches();
-      const totals = totalsByBranch(rows);
-      const totalSelected = activeCodes.reduce((s,c)=>s+totals[c],0);
-      const monthsCount = monthly.length;
-      const uniqueDays = new Set(rows.map(r => r.date)).size;
-      const currentAvgMonthly = monthsCount ? totalSelected / monthsCount : 0;
-      const currentAvgDaily = uniqueDays ? totalSelected / uniqueDays : 0;
-      const variations = calculateVariations(monthly, rows, activeCodes);
+function toggleShowDisc() {
+  showDisc = !showDisc;
+  const btn = document.getElementById('showDiscBtn');
+  btn.classList.toggle('active', showDisc);
+  btn.innerHTML = showDisc ? '<span>🙈</span> Ocultar descontinuados' : '<span>👁</span> Mostrar descontinuados';
+  applyFilters();
+}
 
-      document.getElementById("periodLabel").textContent = rows.length ? `${formatDateBR(document.getElementById("startDate").value)} a ${formatDateBR(document.getElementById("endDate").value)}` : "Sem dados no período selecionado";
-      document.getElementById("totalRevenue").textContent = fmtBRL.format(totalSelected);
-      setVariation("totalFoot", variations.total);
-      document.getElementById("avgMonthly").textContent = fmtBRL.format(currentAvgMonthly);
-      setVariation("avgFoot", variations.monthlyAvg);
-      document.getElementById("avgDaily").textContent = fmtBRL.format(currentAvgDaily);
-      setVariation("dailyFoot", variations.dailyAvg);
+function toggleDisc(codigo) {
+  const s = state[activeTab];
+  if (s.disc.has(codigo)) s.disc.delete(codigo);
+  else s.disc.add(codigo);
+  applyFilters();
+}
 
-      renderLine(monthly, activeCodes);
-      renderDonut(totals, totalSelected, activeCodes);
-    }
+function onQtyChange(codigo, val) {
+  const parsed = parseInt(val.replace(/\./g,'').replace(',',''));
+  if (!isNaN(parsed) && parsed >= 0) {
+    state[activeTab].qtds[codigo] = parsed;
+  }
+  applyFilters();
+}
 
-    function calculateVariations(monthly, rows, activeCodes){
-      // A variação considera somente o último mês selecionado contra o mês anterior selecionado.
-      // Com apenas um mês selecionado, não exibe variação.
-      if(!monthly || monthly.length < 2){
-        return { total: null, monthlyAvg: null, dailyAvg: null };
-      }
+// ═══════════════════════════════════════════════════
+// SORT
+// ═══════════════════════════════════════════════════
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
+  const map = { codigo:0, descricao:1, qtd:2, classe:3, unitario:4, total:-1 };
+  const ths = document.querySelectorAll('thead th');
+  const idx = ['codigo','descricao','classe','qtd','unitario','total'];
+  const thEl = ths[idx.indexOf(col)];
+  if (thEl) thEl.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+  applyFilters();
+}
 
-      const currentMonth = monthly[monthly.length - 1];
-      const previousMonth = monthly[monthly.length - 2];
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function applyFilters() {
+  const s     = state[activeTab];
+  const q     = document.getElementById('searchInput').value.toLowerCase().trim();
+  const data  = RAW[activeTab];
+  const tcls  = activeTab === 'hepr' ? 'total-hepr' : 'total-atox';
 
-      const currentTotal = activeCodes.reduce((s,c)=>s+Number(currentMonth[c] || 0),0);
-      const previousTotal = activeCodes.reduce((s,c)=>s+Number(previousMonth[c] || 0),0);
+  let rows = data.map(r => {
+    const [cod, desc, qtdOrig, cls, unit] = r;
+    const qtd   = s.qtds[cod] !== undefined ? s.qtds[cod] : qtdOrig;
+    const total = qtd * unit;
+    const disc  = s.disc.has(cod);
+    return { cod, desc, qtd, qtdOrig, cls, unit, total, disc };
+  });
 
-      const currentRows = rows.filter(r => {
-        const d = parseDate(r.date);
-        return d && monthKeyFromDate(d) === currentMonth.key;
-      });
-      const previousRows = rows.filter(r => {
-        const d = parseDate(r.date);
-        return d && monthKeyFromDate(d) === previousMonth.key;
-      });
+  // filter
+  rows = rows.filter(r => {
+    if (!showDisc && r.disc) return false;
+    if (!classes[r.cls]) return false;
+    if (q && !r.cod.toLowerCase().includes(q) && !r.desc.toLowerCase().includes(q)) return false;
+    return true;
+  });
 
-      const currentDays = new Set(currentRows.map(r => r.date)).size;
-      const previousDays = new Set(previousRows.map(r => r.date)).size;
-      const currentDailyAvg = currentDays ? currentTotal / currentDays : 0;
-      const previousDailyAvg = previousDays ? previousTotal / previousDays : 0;
-
-      return {
-        total: currentTotal - previousTotal,
-        monthlyAvg: currentTotal - previousTotal,
-        dailyAvg: currentDailyAvg - previousDailyAvg
-      };
-    }
-
-    function getPreviousMonthKeys(firstKey, count){
-      if(!firstKey || !count) return [];
-      const [year, month] = firstKey.split("-").map(Number);
-      const d = new Date(year, month - 1, 1);
-      const keys = [];
-      for(let i = 0; i < count; i++){
-        d.setMonth(d.getMonth() - 1);
-        keys.unshift(monthKeyFromDate(d));
-      }
-      return keys;
-    }
-
-    function setVariation(elementId, delta){
-      const el = document.getElementById(elementId);
-      el.className = "metric-foot";
-      if(delta === null || delta === undefined || !Number.isFinite(delta)){
-        el.textContent = "";
-        return;
-      }
-      const arrow = delta >= 0 ? "▲" : "▼";
-      el.classList.add(delta >= 0 ? "positive" : "negative");
-      el.textContent = `${arrow} ${fmtBRLFull.format(Math.abs(delta))}`;
-    }
-
-    function formatDateBR(iso){
-      if(!iso) return "";
-      const [y,m,d] = iso.split("-");
-      return `${d}/${m}/${y}`;
-    }
-
-    function renderLine(monthly, activeCodes){
-      document.getElementById("lineInfo").textContent = `${monthly.length} meses • ${activeCodes.length} filiais`;
-      const series = activeCodes.map(code => ({
-        name: BRANCHES[code].label,
-        data: monthly.map(m => Math.round(m[code]))
-      }));
-      const categories = monthly.map(m => m.label);
-      const opts = {
-        chart: { type:"line", height:500, width:"100%", toolbar:{show:false}, zoom:{enabled:false}, foreColor:"#9fc3eb", background:"transparent", fontFamily:"Inter, sans-serif", redrawOnParentResize:true, redrawOnWindowResize:true, parentHeightOffset:0 },
-        series,
-        colors: activeCodes.map(c => BRANCHES[c].color),
-        stroke: { width:4, curve:"smooth", lineCap:"round" },
-        markers: { size:5, strokeWidth:0, hover:{size:7} },
-        grid: { borderColor:"rgba(147,197,253,.14)", strokeDashArray:0, padding:{left:18,right:34,top:12,bottom:8} },
-        xaxis: { categories, labels:{style:{colors:"#bfdbfe",fontWeight:700}}, axisBorder:{color:"rgba(147,197,253,.25)"}, axisTicks:{show:false} },
-        yaxis: { min:0, forceNiceScale:true, tickAmount:5, labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} },
-        legend: { show:false },
-        tooltip: { theme:"dark", y:{formatter:v => fmtBRLFull.format(v)} },
-        noData: { text:"Sem dados para exibir", style:{color:"#bfdbfe"} }
-      };
-      document.getElementById("emptyLine").style.display = monthly.length ? "none" : "block";
-      if(lineChart){ lineChart.updateOptions(opts, true, true); }
-      else { lineChart = new ApexCharts(document.querySelector("#lineChart"), opts); lineChart.render(); }
-    }
-
-    function renderDonut(totals, totalSelected, activeCodes){
-      const values = activeCodes.map(c => Math.round(totals[c]));
-      const opts = {
-        chart: { type:"donut", height:365, toolbar:{show:false}, background:"transparent", fontFamily:"Inter, sans-serif", events:{ dataPointSelection:function(event, chartContext, config){ const code = activeCodes[config.dataPointIndex]; if(code){ setSelectedBranches([code]); updateDashboard(); } } } },
-        series: values,
-        labels: activeCodes.map(c => BRANCHES[c].label),
-        colors: activeCodes.map(c => BRANCHES[c].color),
-        stroke: { width:0 },
-        dataLabels: { enabled:true, formatter: val => `${fmtPct.format(val)}%`, style:{fontSize:"12px", fontWeight:900, colors:["#06101d"]}, dropShadow:{enabled:false} },
-        legend: { show:false },
-        tooltip: { theme:"dark", y:{ formatter:v => fmtBRLFull.format(v) } },
-        plotOptions: { pie:{ donut:{ size:"67%", labels:{ show:true, name:{show:true,color:"#93c5fd",fontSize:"13px",fontWeight:800}, value:{show:true,color:"#f8fbff",fontSize:"28px",fontWeight:900,formatter:()=>fmtBRL.format(totalSelected)}, total:{show:true,label:"Total",color:"#93c5fd",fontSize:"14px",fontWeight:900,formatter:()=>fmtBRL.format(totalSelected)} } } } }
-      };
-      if(donutChart){ donutChart.updateOptions(opts); donutChart.updateSeries(values); }
-      else { donutChart = new ApexCharts(document.querySelector("#donutChart"), opts); donutChart.render(); }
-      renderDonutLegend(totals, totalSelected, activeCodes);
-    }
-
-    function renderDonutLegend(totals, totalSelected, activeCodes){
-      const el = document.getElementById("donutLegend");
-      el.innerHTML = activeCodes.map(code => {
-        const value = totals[code] || 0;
-        const pct = totalSelected ? (value / totalSelected) * 100 : 0;
-        return `<div class="legend-item" data-branch="${code}">
-          <div class="legend-name"><span class="dot" style="background:${BRANCHES[code].color}"></span>${BRANCHES[code].label}</div>
-          <div class="legend-value">${fmtBRL.format(value)}</div>
-          <div class="legend-pct">${fmtPct.format(pct)}%</div>
-        </div>`;
-      }).join("");
-      el.querySelectorAll(".legend-item").forEach(item => {
-        item.addEventListener("click", () => { setSelectedBranches([item.dataset.branch]); updateDashboard(); });
-        item.style.cursor = "pointer";
-      });
-    }
-
-    function getSelectedBranches(){
-      const checked = [...document.querySelectorAll('#branchMenu input[type="checkbox"]:checked')].map(i => i.value);
-      return checked.length ? checked : BRANCH_ORDER.slice();
-    }
-
-    function setSelectedBranches(codes){
-      document.querySelectorAll('#branchMenu input[type="checkbox"]').forEach(input => input.checked = codes.includes(input.value));
-      updateBranchButton();
-    }
-
-    function updateBranchButton(){
-      const selected = getSelectedBranches();
-      const btn = document.getElementById("branchBtn");
-      if(selected.length === BRANCH_ORDER.length) btn.textContent = "Todas as filiais";
-      else if(selected.length === 1) btn.textContent = BRANCHES[selected[0]].label;
-      else btn.textContent = `${selected.length} filiais selecionadas`;
-    }
-
-    function getSelectedMonths(){
-      const checked = [...document.querySelectorAll('#monthMenu input[type="checkbox"]:checked')].map(i => i.value);
-      return checked.length ? checked : [];
-    }
-
-    function setSelectedMonths(keys){
-      document.querySelectorAll('#monthMenu input[type="checkbox"]').forEach(input => input.checked = keys.includes(input.value));
-      updateMonthButton();
-    }
-
-    function updateMonthButton(){
-      const allKeys = getAvailableMonths();
-      const selected = getSelectedMonths();
-      const btn = document.getElementById("monthBtn");
-      if(!selected.length || selected.length === allKeys.length) btn.textContent = "Todos os meses";
-      else if(selected.length === 1) btn.textContent = monthLabel(selected[0]);
-      else btn.textContent = `${selected.length} meses selecionados`;
-    }
-
-    function bestDayOfMonth(rows, activeCodes){
-      const byDay = new Map();
-      for(const r of rows){
-        const d = parseDate(r.date);
-        if(!d) continue;
-        const day = d.getDate();
-        const value = activeCodes.reduce((s,c)=>s+Number(r[c] || 0),0);
-        byDay.set(day, (byDay.get(day) || 0) + value);
-      }
-      let best = {day:null, value:0};
-      byDay.forEach((value, day) => { if(value > best.value) best = {day, value}; });
-      return best;
-    }
-
-    function compactBRL(value){
-      const abs = Math.abs(value || 0);
-      if(abs >= 1_000_000) return `R$ ${(value/1_000_000).toLocaleString("pt-BR",{maximumFractionDigits:1})} mi`;
-      if(abs >= 1_000) return `R$ ${(value/1_000).toLocaleString("pt-BR",{maximumFractionDigits:0})} mil`;
-      return fmtBRL.format(value || 0);
-    }
-
-
-    function preparePrint(){
-      document.body.classList.add("print-mode");
-      const selected = getSelectedBranches();
-      if(lineChart){
-        lineChart.updateOptions({
-          chart:{ height:380, width:"100%", redrawOnParentResize:true, redrawOnWindowResize:true, parentHeightOffset:0 },
-          stroke:{ width:3, curve:"straight", lineCap:"round" },
-          markers:{ size:selected.length > 1 ? 4 : 5, strokeWidth:0, hover:{size:7} },
-          grid:{ padding:{left:18,right:38,top:12,bottom:8} },
-          yaxis:{ min:0, forceNiceScale:true, tickAmount:5, labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} }
-        }, false, true);
-      }
-      if(donutChart) donutChart.updateOptions({ chart:{ height:255, width:"100%", parentHeightOffset:0 } }, false, true);
-      setTimeout(() => {
-        window.dispatchEvent(new Event("resize"));
-        if(lineChart) lineChart.resize();
-        if(donutChart) donutChart.resize();
-        setTimeout(() => window.print(), 350);
-      }, 250);
-    }
-
-    window.addEventListener("afterprint", () => {
-      document.body.classList.remove("print-mode");
-      if(lineChart){
-        lineChart.updateOptions({
-          chart:{ height:500, width:"100%" },
-          stroke:{ width:4, curve:"smooth", lineCap:"round" },
-          markers:{ size:5, strokeWidth:0, hover:{size:7} },
-          grid:{ padding:{left:18,right:34,top:12,bottom:8} },
-          yaxis:{ min:0, forceNiceScale:true, tickAmount:5, labels:{style:{colors:"#7dd3fc",fontWeight:700}, formatter:v => compactBRL(v)} }
-        }, false, true);
-      }
-      if(donutChart) donutChart.updateOptions({ chart:{ height:365, width:"100%" } }, false, true);
-      setTimeout(updateDashboard, 150);
+  // sort
+  if (sortCol) {
+    const key = { codigo:'cod', descricao:'desc', qtd:'qtd', classe:'cls', unitario:'unit', total:'total' }[sortCol];
+    rows.sort((a,b) => {
+      const av = a[key], bv = b[key];
+      return typeof av === 'string' ? av.localeCompare(bv) * sortDir : (av - bv) * sortDir;
     });
+  }
 
-    document.getElementById("printBtn").addEventListener("click", preparePrint);
-    document.getElementById("clearBtn").addEventListener("click", () => { setupDateFilters(); setSelectedBranches(BRANCH_ORDER.slice()); setSelectedMonths(getAvailableMonths()); updateDashboard(); });
-    document.getElementById("startDate").addEventListener("change", updateDashboard);
-    document.getElementById("endDate").addEventListener("change", updateDashboard);
-    document.getElementById("branchBtn").addEventListener("click", () => document.getElementById("branchMulti").classList.toggle("open"));
-    document.getElementById("monthBtn").addEventListener("click", () => document.getElementById("monthMulti").classList.toggle("open"));
-    document.getElementById("selectAllBranches").addEventListener("click", () => { setSelectedBranches(BRANCH_ORDER.slice()); updateDashboard(); });
-    document.getElementById("clearBranches").addEventListener("click", () => { setSelectedBranches([]); updateDashboard(); });
-    document.getElementById("selectAllMonths").addEventListener("click", () => { setSelectedMonths(getAvailableMonths()); updateDashboard(); });
-    document.getElementById("clearMonths").addEventListener("click", () => { setSelectedMonths([]); updateDashboard(); });
-    document.querySelectorAll('#branchMenu input[type="checkbox"]').forEach(input => input.addEventListener("change", () => { updateBranchButton(); updateDashboard(); }));
-    document.addEventListener("click", (e) => {
-      if(!document.getElementById("branchMulti").contains(e.target)) document.getElementById("branchMulti").classList.remove("open");
-      if(!document.getElementById("monthMulti").contains(e.target)) document.getElementById("monthMulti").classList.remove("open");
-    });
+  // summary
+  const allActive = rows.filter(r => !r.disc);
+  const totalAtivo = allActive.reduce((s, r) => s + r.total, 0);
+  const totalGeral = rows.reduce((s, r) => s + r.total, 0);
+  const discCount  = rows.filter(r => r.disc).length;
 
-    setupDateFilters();
-    setupMonthFilter();
-    updateBranchButton();
-    updateMonthButton();
-    updateDashboard();
-  </script>
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="sum-card ${activeTab === 'hepr' ? 'hepr' : 'atox'}">
+      <div class="val">${brl(totalAtivo)}</div>
+      <div class="lbl">Total ativo</div>
+    </div>
+    <div class="sum-card">
+      <div class="val">${num(allActive.reduce((s,r)=>s+r.qtd,0))} m</div>
+      <div class="lbl">Metros ativos</div>
+    </div>
+    <div class="sum-card active-items">
+      <div class="val">${allActive.length}</div>
+      <div class="lbl">Itens ativos</div>
+    </div>
+    <div class="sum-card disc">
+      <div class="val">${discCount}</div>
+      <div class="lbl">Descontinuados</div>
+    </div>
+    <div class="sum-card">
+      <div class="val">${brl(totalGeral)}</div>
+      <div class="lbl">Total geral (vis.)</div>
+    </div>
+  `;
+
+  // table body
+  const tbody = document.getElementById('tableBody');
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('emptyMsg').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyMsg').style.display = 'none';
+
+  tbody.innerHTML = rows.map(r => {
+    const modified = s.qtds[r.cod] !== undefined && s.qtds[r.cod] !== r.qtdOrig;
+    const discCls  = r.disc ? 'discontinued' : '';
+    const btnTxt   = r.disc ? '↩ Reativar' : '✕ Descontinuar';
+    const btnCls   = r.disc ? 'disc-btn is-disc' : 'disc-btn';
+    return `
+    <tr class="${discCls}">
+      <td class="code-cell">${r.cod}</td>
+      <td class="desc-cell">${r.desc}</td>
+      <td><span class="badge badge-${r.cls}">${r.cls}</span></td>
+      <td class="num-cell">
+        <div class="qty-wrap" style="justify-content:flex-end">
+          <input
+            class="qty-input ${modified ? 'modified' : ''}"
+            type="text"
+            value="${num(r.qtd)}"
+            title="Clique para editar"
+            onblur="onQtyChange('${r.cod}', this.value)"
+            onkeydown="if(event.key==='Enter')this.blur()"
+            onfocus="this.select()"
+          >
+        </div>
+      </td>
+      <td class="num-cell">${brl(r.unit)}</td>
+      <td class="num-cell ${tcls}">${brl(r.total)}</td>
+      <td style="text-align:center">
+        <button class="${btnCls}" onclick="toggleDisc('${r.cod}')">${btnTxt}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════
+function exportCSV() {
+  const s    = state[activeTab];
+  const data = RAW[activeTab];
+  const tabLabel = activeTab === 'hepr' ? 'HEPR' : 'HEPR_ATOX';
+
+  const header = ['Cenario','Codigo','Descricao','Classe','Qtd_Ideal','Qtd_Ajustada','Vlr_Unit','Total','Status'];
+  const rows = data.map(r => {
+    const [cod, desc, qtdOrig, cls, unit] = r;
+    const qtd   = s.qtds[cod] !== undefined ? s.qtds[cod] : qtdOrig;
+    const total = (qtd * unit).toFixed(2);
+    const st    = s.disc.has(cod) ? 'DESCONTINUADO' : 'ATIVO';
+    return [tabLabel, cod, `"${desc}"`, cls, qtdOrig, qtd, unit.toFixed(4), total, st].join(';');
+  });
+
+  const csv  = [header.join(';'), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `CD_Recife_${tabLabel}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// INIT
+applyFilters();
+</script>
 </body>
 </html>
